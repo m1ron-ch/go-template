@@ -1,0 +1,11 @@
+server:
+  address: "localhost"
+  port: "8080"
+  timeout: 45s
+
+database:
+  db_name: "niitzi"
+  hostname: "127.0.0.1"
+  port: "3306"
+  username: "root"
+  password: "9298"
