@@ -11,9 +11,17 @@ import (
 )
 
 type Config struct {
-	ServerConfig ServerConfig `yaml:"server"`
-	DBConfig     DBConfig     `yaml:"database"`
-	LoggerConfig LoggerConfig `yaml:"logger"`
+	Env          string        `yaml:"env" env-default:"local"`
+	GRPC         GRPCConfig    `yaml:"grpc"`
+	TokenTTL     time.Duration `yaml:"token_ttl" env-required:"true"`
+	ServerConfig ServerConfig  `yaml:"server"`
+	DBConfig     DBConfig      `yaml:"database"`
+	LoggerConfig LoggerConfig  `yaml:"logger"`
+}
+
+type GRPCConfig struct {
+	Port    string        `yaml:"port"`
+	Timeout time.Duration `yams:"timeout"`
 }
 
 type ServerConfig struct {
@@ -40,7 +48,7 @@ type LoggerConfig struct {
 	Compress   bool   `yaml:"compress"`
 }
 
-func LoadConfig(fileConfig string) (*Config, error) {
+func Load(fileConfig string) (*Config, error) {
 	_, b, _, _ := runtime.Caller(0)
 	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
 	configPath := filepath.Join(basePath, "configs", fileConfig+".yaml")

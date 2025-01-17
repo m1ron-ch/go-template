@@ -9,7 +9,7 @@ import (
 	"main/internal/logger"
 	"os"
 
-	"go.uber.org/zap/zapcore"
+	"github.com/gookit/slog"
 )
 
 type Application struct {
@@ -23,40 +23,57 @@ func NewApplication() *Application {
 }
 
 func (app *Application) Run(configFile *string) error {
-	cfg, err := config.LoadConfig(*configFile)
+	cfg, err := config.Load(*configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "config error: %s\n", err)
 		os.Exit(1)
 	}
 
-	var zapLevel zapcore.Level
-	switch cfg.LoggerConfig.Level {
-	case "debug":
-		zapLevel = zapcore.DebugLevel
-	case "info":
-		zapLevel = zapcore.InfoLevel
-	case "warn":
-		zapLevel = zapcore.WarnLevel
-	case "error":
-		zapLevel = zapcore.ErrorLevel
-	default:
-		zapLevel = zapcore.InfoLevel
-	}
+	// var zapLevel zapcore.Level
+	// switch cfg.LoggerConfig.Level {
+	// case "debug":
+	// 	zapLevel = zapcore.DebugLevel
+	// case "info":
+	// 	zapLevel = zapcore.InfoLevel
+	// case "warn":
+	// 	zapLevel = zapcore.WarnLevel
+	// case "error":
+	// 	zapLevel = zapcore.ErrorLevel
+	// default:
+	// 	zapLevel = zapcore.InfoLevel
+	// }
 
-	logg, err := logger.NewLoggerWithRotation(
-		cfg.LoggerConfig.FilePath,
-		cfg.LoggerConfig.MaxSizeMB,
-		cfg.LoggerConfig.MaxBackups,
-		cfg.LoggerConfig.MaxAgeDays,
-		cfg.LoggerConfig.Compress,
-		zapLevel,
-	)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "logger init error: %s\n", err)
-		os.Exit(1)
-	}
+	// logg, err := logger.NewLoggerWithRotation(
+	// 	cfg.LoggerConfig.FilePath,
+	// 	cfg.LoggerConfig.MaxSizeMB,
+	// 	cfg.LoggerConfig.MaxBackups,
+	// 	cfg.LoggerConfig.MaxAgeDays,
+	// 	cfg.LoggerConfig.Compress,
+	// 	zapLevel,
+	// )
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "logger init error: %s\n", err)
+	// 	os.Exit(1)
+	// }
 
-	defer logg.Sync()
+	// defer logg.Sync()
+
+	// logg.Info("test", "msg", "testt", "dmdmd", "Asdasda")
+
+	slog.Configure(func(logger *slog.SugaredLogger) {
+		f := logger.Formatter.(*slog.TextFormatter)
+		f.EnableColor = true
+	})
+
+	slog.SetFormatter(slog.NewJSONFormatter())
+
+	slog.Trace("this is a simple log message")
+	slog.Debug("this is a simple log message")
+	slog.Info("this is a simple log message")
+	slog.Notice("this is a simple log message")
+	slog.Warn("this is a simple log message")
+	slog.Error("this is a simple log message")
+	slog.Fatal("this is a simple log message")
 
 	db, err := database.New(cfg.DBConfig)
 	if err != nil {
