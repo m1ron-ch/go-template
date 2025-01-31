@@ -14,45 +14,39 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Start(router *mux.Router, cfg config.ServerConfig) {
+func Start(router *mux.Router, cfg config.ServerConfig) error {
 	srv := &http.Server{
-		Addr:         cfg.Address + ":" + cfg.Port,
+		Addr:         fmt.Sprintf("%s:%s", cfg.Address, cfg.Port),
 		Handler:      router,
 		WriteTimeout: cfg.Timeout,
 		ReadTimeout:  cfg.Timeout,
 		IdleTimeout:  cfg.IdleTimeout,
 	}
 
-	printPathRouter(router)
-
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			// customlog.AddLog(&log, nil, 0, int(customlog.Error), int(customlog.Server), "Ошибка запуска сервера", "Ошибка запуска сервера "+err.Error())
-			// fmt.Printf("Error starting the server: %v\n", err)
+			log.Printf("Error starting the server: %v\n", err)
 		}
 	}()
 
-	url := fmt.Sprintf("`%s:%s`", cfg.Address, cfg.Port)
-	log.Println("Server is listening on " + url)
-	// customlog.AddLog(&log, nil, 0, int(customlog.Info), int(customlog.Server), "Запуск сервера", "Сервер прослушивает "+cfg.Server.Address)
+	log.Printf("Server is listening on %s:%s", cfg.Address, cfg.Port)
 
 	<-stopChan
-
-	fmt.Println("Stopping the server...")
+	log.Println("Stopping the server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		// customlog.AddLog(&log, nil, 0, int(customlog.Error), int(customlog.Server), "Ошибка остановка сервера", "Ошибка остановка сервера "+err.Error())
-		fmt.Printf("Error stopping the server: %v\n", err)
-	} else {
-		// customlog.AddLog(&log, nil, 0, int(customlog.Info), int(customlog.Server), "Сервер остановлен", "Сервер остановлен")
-		fmt.Println("Server stopped")
+		log.Printf("Error stopping the server: %v\n", err)
+		return err
 	}
+
+	log.Println("Server stopped")
+	return nil
 }
 
 const (

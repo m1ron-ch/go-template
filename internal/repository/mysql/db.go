@@ -1,10 +1,10 @@
+package mysql
+
 // Copyright (c) 2024 m1ron
 //
 // Author: m1ron (https://github.com/m1ron-ch)
 // Licensed under the MIT License.
 // See LICENSE file in the project root for full license information.
-
-package database
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 
 // Database обёртка над *sql.DB, тут можно добавить поля для логирования, метрик и т.п.
 type Database struct {
-	conn *sql.DB
+	DB *sql.DB
 }
 
 // New создаёт новое подключение к базе данных и возвращает структуру Database.
@@ -32,13 +32,13 @@ func New(cfg config.DBConfig) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Database{conn: db}, nil
+	return &Database{DB: db}, nil
 }
 
 // Close закрывает соединение с БД
 func (h *Database) Close() {
-	if h.conn != nil {
-		if err := h.conn.Close(); err != nil {
+	if h.DB != nil {
+		if err := h.DB.Close(); err != nil {
 			log.Printf("[ERROR] closing DB: %v\n", err)
 		}
 	}
@@ -77,7 +77,7 @@ func openDB(cfg config.DBConfig) (*sql.DB, error) {
 
 // Conn возвращает *sql.DB (иногда нужно для ручных операций)
 func (h *Database) Conn() *sql.DB {
-	return h.conn
+	return h.DB
 }
 
 // ----------------------------------------------------------------------------
@@ -96,7 +96,7 @@ func (h *Database) WithTransaction(
 		isoLevel = sql.LevelReadCommitted
 	}
 
-	tx, err := h.conn.BeginTx(ctx, &sql.TxOptions{Isolation: isoLevel})
+	tx, err := h.DB.BeginTx(ctx, &sql.TxOptions{Isolation: isoLevel})
 	if err != nil {
 		return fmt.Errorf("begin tx error: %w", err)
 	}
@@ -345,7 +345,7 @@ func (h *Database) SelectDataUniversal(
 	query := sb.String()
 
 	log.Printf("[DEBUG] SelectDataUniversal query=%q vals=%v\n", query, vals)
-	rows, err := h.conn.QueryContext(ctx, query, vals...)
+	rows, err := h.DB.QueryContext(ctx, query, vals...)
 	if err != nil {
 		return nil, fmt.Errorf("SelectDataUniversal query error: %w", err)
 	}
@@ -410,7 +410,7 @@ func (h *Database) DoesDataExist(ctx context.Context, tableName string, conditio
 	)
 
 	var exists bool
-	err := h.conn.QueryRowContext(ctx, query, values...).Scan(&exists)
+	err := h.DB.QueryRowContext(ctx, query, values...).Scan(&exists)
 	if err != nil {
 		log.Printf("[ERROR] DoesDataExist: %v\n", err)
 		return false, err
@@ -431,7 +431,7 @@ func (h *Database) CountData(ctx context.Context, tableName, where string, args 
 	log.Printf("[DEBUG] CountData query=%q args=%v\n", query, args)
 
 	var count int
-	err := h.conn.QueryRowContext(ctx, query, args...).Scan(&count)
+	err := h.DB.QueryRowContext(ctx, query, args...).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -470,7 +470,7 @@ func (h *Database) InsertData(ctx context.Context, tableName string, data map[st
 
 	log.Printf("[DEBUG] InsertData query=%q values=%v\n", query, values)
 
-	stmt, err := h.conn.PrepareContext(ctx, query)
+	stmt, err := h.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return 0, fmt.Errorf("InsertData Prepare error: %w", err)
 	}
@@ -522,7 +522,7 @@ func (h *Database) UpdateData(ctx context.Context, tableName string, data map[st
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s", tableName, setClause, whereClause)
 	log.Printf("[DEBUG] UpdateData query=%q values=%v\n", query, values)
 
-	result, err := h.conn.ExecContext(ctx, query, values...)
+	result, err := h.DB.ExecContext(ctx, query, values...)
 	if err != nil {
 		return 0, fmt.Errorf("UpdateData Exec error: %w", err)
 	}
@@ -558,7 +558,7 @@ func (h *Database) DeleteData(ctx context.Context, tableName string, conditions 
 	query := fmt.Sprintf("DELETE FROM %s WHERE %s", tableName, whereClause)
 	log.Printf("[DEBUG] DeleteData query=%q values=%v\n", query, values)
 
-	result, err := h.conn.ExecContext(ctx, query, values...)
+	result, err := h.DB.ExecContext(ctx, query, values...)
 	if err != nil {
 		return 0, fmt.Errorf("DeleteData Exec error: %w", err)
 	}
@@ -578,7 +578,7 @@ func (h *Database) DeleteData(ctx context.Context, tableName string, conditions 
 // Вы всегда можете написать что угодно, например JOIN нескольких таблиц, группировки и т.д.
 func (h *Database) SelectSimple(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	log.Printf("[DEBUG] SelectSimple query=%q args=%v\n", query, args)
-	rows, err := h.conn.QueryContext(ctx, query, args...)
+	rows, err := h.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		log.Printf("[ERROR] SelectSimple: %v\n", err)
 		return nil, err
@@ -589,7 +589,7 @@ func (h *Database) SelectSimple(ctx context.Context, query string, args ...inter
 // ExecSimple — для выполнения абсолютно кастомных запросов (INSERT, UPDATE, DELETE, DDL).
 func (h *Database) ExecSimple(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	log.Printf("[DEBUG] ExecSimple query=%q args=%v\n", query, args)
-	result, err := h.conn.ExecContext(ctx, query, args...)
+	result, err := h.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		log.Printf("[ERROR] ExecSimple: %v\n", err)
 		return nil, err

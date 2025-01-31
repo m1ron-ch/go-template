@@ -48,7 +48,7 @@ type LoggerConfig struct {
 	Compress   bool   `yaml:"compress"`
 }
 
-func Load(fileConfig string) (*Config, error) {
+func MustLoad(fileConfig string) (*Config, error) {
 	_, b, _, _ := runtime.Caller(0)
 	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
 	configPath := filepath.Join(basePath, "configs", fileConfig+".yaml")
