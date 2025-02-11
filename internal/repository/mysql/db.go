@@ -46,6 +46,7 @@ func (h *Database) Close() {
 
 // openDB формирует DSN и открывает соединение с БД
 func openDB(cfg config.DBConfig) (*sql.DB, error) {
+	// Формирование DSN
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci",
 		cfg.Username,
@@ -55,24 +56,34 @@ func openDB(cfg config.DBConfig) (*sql.DB, error) {
 		cfg.DBName,
 	)
 
-	fmt.Println(dsn)
+	fmt.Println("Connecting to:", dsn) // для отладки (но не стоит логировать чувствительные данные в продакшене)
 
+	// Открытие соединения
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
 	// Настройка пула соединений
-	db.SetConnMaxLifetime(time.Minute * 3)
+	db.SetConnMaxLifetime(3 * time.Minute)
 	db.SetMaxOpenConns(100)
 	db.SetMaxIdleConns(100)
 
-	// Проверяем соединение
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+	// Попытки подключения с повторными попытками
+	maxRetries := 5
+	var pingErr error
+	for i := 0; i < maxRetries; i++ {
+		pingErr = db.Ping()
+		if pingErr == nil {
+			// Успешное подключение
+			log.Println("Успешное подключение к базе данных")
+			return db, nil
+		}
+		log.Printf("Попытка %d/%d: не удалось подключиться к базе данных: %v", i+1, maxRetries, pingErr)
+		time.Sleep(2 * time.Second) // задержка между попытками
 	}
 
-	return db, nil
+	return nil, fmt.Errorf("failed to ping database after %d attempts: %w", maxRetries, pingErr)
 }
 
 // Conn возвращает *sql.DB (иногда нужно для ручных операций)

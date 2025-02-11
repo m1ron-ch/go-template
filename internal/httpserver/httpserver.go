@@ -32,6 +32,8 @@ func Start(router *mux.Router, cfg config.ServerConfig) error {
 		}
 	}()
 
+	printPathRouter(router)
+
 	log.Printf("Server is listening on %s:%s", cfg.Address, cfg.Port)
 
 	<-stopChan

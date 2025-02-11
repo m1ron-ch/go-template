@@ -11,17 +11,10 @@ import (
 )
 
 type Config struct {
-	Env          string        `yaml:"env" env-default:"local"`
-	GRPC         GRPCConfig    `yaml:"grpc"`
-	TokenTTL     time.Duration `yaml:"token_ttl" env-required:"true"`
-	ServerConfig ServerConfig  `yaml:"server"`
-	DBConfig     DBConfig      `yaml:"database"`
-	LoggerConfig LoggerConfig  `yaml:"logger"`
-}
-
-type GRPCConfig struct {
-	Port    string        `yaml:"port"`
-	Timeout time.Duration `yams:"timeout"`
+	Env          string       `yaml:"env" env-default:"local"`
+	ServerConfig ServerConfig `yaml:"server"`
+	DBConfig     DBConfig     `yaml:"database"`
+	JWTSecret    string       `yaml:"jwt_secret"`
 }
 
 type ServerConfig struct {
@@ -37,15 +30,6 @@ type DBConfig struct {
 	Port     string `yaml:"port"`
 	Username string `yaml:"user"`
 	Password string `yaml:"password"`
-}
-
-type LoggerConfig struct {
-	Level      string `yaml:"level"`
-	FilePath   string `yaml:"file_path"`
-	MaxSizeMB  int    `yaml:"max_size_mb"`
-	MaxBackups int    `yaml:"max_backups"`
-	MaxAgeDays int    `yaml:"max_age_days"`
-	Compress   bool   `yaml:"compress"`
 }
 
 func MustLoad(fileConfig string) (*Config, error) {

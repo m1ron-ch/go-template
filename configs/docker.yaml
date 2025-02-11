@@ -1,0 +1,15 @@
+env: "local" #prod
+
+jwt_secret: "JWTSecretT0Ken$!#@*(!$)!"
+
+server:
+  address: ""
+  port: "8080"
+  timeout: 45s
+
+database:
+  db_name: "blog_electronchik"
+  hostname: "db"
+  port: "3306"
+  username: "root"
+  password: "9298"

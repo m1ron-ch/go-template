@@ -1,8 +1,6 @@
 env: "local" #prod
-token_ttl: 1h
-grpc:
-  port: 44044
-  timeout: 10h
+
+jwt_secret: "JWTSecretT0Ken$!#@*(!$)!"
 
 server:
   address: "localhost"
@@ -10,7 +8,7 @@ server:
   timeout: 45s
 
 database:
-  db_name: "niitzi"
+  db_name: "blog_electronchik"
   hostname: "127.0.0.1"
   port: "3306"
   username: "root"
