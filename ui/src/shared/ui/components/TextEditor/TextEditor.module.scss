@@ -1,0 +1,96 @@
+.editor {
+  background: #fff;
+  border: 1px solid #0d0d0d;
+  border-radius: 10px;
+}
+
+.editorContent {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: none;
+  outline: none;
+
+  h1 {
+    font-size: 22px;
+    line-height: 1.6;
+  }
+
+  h2 {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  ul,
+  ol {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    padding: 0 15px;
+
+    list-style-position: inside;
+
+    li {
+      font-size: 14px;
+      line-height: 1.7;
+
+      p {
+        display: inline;
+      }
+    }
+  }
+
+  a {
+    cursor: pointer;
+    font-weight: 700;
+    line-height: 1.7;
+    color: var(--color-accent-500);
+  }
+
+  img {
+    display: block;
+
+    max-width: 100%;
+    height: auto;
+    margin: 10px auto;
+
+    object-fit: cover;
+  }
+
+  blockquote {
+    padding-left: 16px;
+    border-left: 2px solid rgba(#0d0d0d, 0.1);
+  }
+
+  hr {
+    height: 1px;
+    margin: 12px 0;
+    background-color: #d5d5d5;
+    border: none;
+  }
+
+  & > div {
+    outline: none;
+  }
+
+  div:has(iframe) {
+    padding: 0 5px;
+  }
+
+  iframe {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--color-gray-500);
+  }
+}

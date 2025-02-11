@@ -1,0 +1,101 @@
+// .loginFormContainer {
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   background: #f0f2f5;
+// }
+
+.forgotPasswordModal {
+  .ant-modal-content {
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+  }
+
+  .modalContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .modalTitle {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .modalDescription {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+  }
+
+  .form {
+    width: 100%;
+    .formItem {
+      width: 100%;
+    }
+  }
+
+  .input {
+    height: 48px;
+    font-size: 16px;
+    padding: 0 16px;
+    border-radius: 4px;
+  }
+
+  .confirmButton {
+    height: 48px;
+    font-size: 16px;
+    border-radius: 4px;
+    margin-top: 16px;
+  }
+
+  .resendInfo {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #999;
+  }
+
+}
+
+.form {
+  // max-width: 400px;
+  width: 100%;
+  padding: 0 20 0 20px;
+  background: #fff;
+  //box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.formItem {
+  margin-bottom: 20px;
+}
+
+.loginButton {
+  width: 100%;
+}
+
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.ant-input {
+  height: 40px;
+  padding: 8px 16px;
+  font-size: 16px;
+}
+
+.ant-btn {
+  height: 40px;
+  font-size: 16px;
+}
+
+.ant-typography {
+  text-align: center;
+}
+
+.ant-checkbox-wrapper {
+  display: flex;
+  justify-content: center;
+}

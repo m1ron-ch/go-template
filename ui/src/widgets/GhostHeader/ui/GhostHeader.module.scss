@@ -1,0 +1,23 @@
+.header {
+  display: flex;
+  align-items: center;
+  background: white; /* стандартный темный фон Ant Design */
+  padding: 0 16px;
+}
+
+.logo {
+  margin-right: 20px;
+}
+
+.menu {
+  /* пусть занимает всё оставшееся пространство, чтобы прижать правый блок к краю */
+  flex: 1;
+  background: transparent;
+  border: none; /* убираем бордюр */
+}
+
+.rightSide {
+  /* просто блок, чтобы разместить Login/Dropdown справа */
+  display: flex;
+  align-items: center;
+}

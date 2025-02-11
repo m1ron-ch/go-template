@@ -1,0 +1,19 @@
+@mixin global-container {
+  overflow: hidden;
+
+  width: auto;
+  max-width: 1920px;
+  margin: 0 auto;
+
+  //   padding: 8rem 0 0;
+
+  box-shadow: 0 0 100px #000;
+}
+
+@mixin container {
+  width: 100%;
+  max-width: 1620px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 0 15px;
+}
