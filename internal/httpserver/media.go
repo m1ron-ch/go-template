@@ -57,8 +57,8 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 		mediaData = append(mediaData, media.Media{
 			Filename:   filename,
 			UploadDate: fileInfo.ModTime(),
-			Url:        fmt.Sprintf("/media/%s", filename),
-			FullUrl:    fmt.Sprintf("http://%s/static/media/%s", r.Host, filename),
+			Url:        fmt.Sprintf("/static/media/%s", filename),
+			FullUrl:    fmt.Sprintf("h/static/media/%s", filename),
 			Type:       fileType,
 		})
 	}
@@ -232,9 +232,9 @@ func (h *Handler) UploadMediaHandle(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Build the file URL from your server settings
-			serverAddr := h.config.ServerConfig.Address
-			serverPort := h.config.ServerConfig.Port
-			fileURL := fmt.Sprintf("http://%s:%s/static/media/%s", serverAddr, serverPort, filename)
+			// serverAddr := h.config.ServerConfig.Address
+			// serverPort := h.config.ServerConfig.Port
+			fileURL := fmt.Sprintf("/static/media/%s", filename)
 
 			// Append this file's details to the result slice
 			uploadedFiles = append(uploadedFiles, map[string]interface{}{

@@ -46,7 +46,7 @@ interface News {
   create_at: string
   update_at: string
   is_visibility: boolean
-  image_name: string
+  image: string
   publish_date: string
   date: string
   time: string
@@ -66,7 +66,7 @@ interface ImageData {
 
 /** Editor data (single language, without separate by/en) */
 interface EditorData {
-  image_name: string
+  image: string
   publish_date: string
   is_visibility: boolean
   entity_id: number
@@ -190,16 +190,16 @@ export const NewsPage = () => {
         json: data.content_json ? JSON.parse(data.content_json) : { blocks: [] },
       })
       setImage({
-        url: `${AppSettings.API_URL}static/media/${data.image_name}`,
+        url: `${data.image}`,
         upload_date: '',
-        filename: data.image_name,
+        filename: data.image,
         type: '',
       })
 
       form.setFieldsValue({
         is_visibility: data.is_visibility ? 1 : 0,
         type: data.type,
-        image: data.image_name || '',
+        image: data.image || '',
         title: data.title || '',
         preview: data.preview || '',
         // publish_date (if needed)
@@ -385,7 +385,7 @@ export const NewsPage = () => {
         return (
           <img
             style={{ maxWidth: '100px' }}
-            src={`${AppSettings.API_URL}static/media/${news.image_name}`}
+            src={`${news.image}`}
             alt="news"
           />
         )
