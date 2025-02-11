@@ -15,7 +15,7 @@ func NewNewsRepository(db *sql.DB) news.Repository {
 }
 
 func (r *NewsRepository) GetAll() ([]news.News, error) {
-	rows, err := r.db.Query(`SELECT n.uid, n.title, n.description, n.content, n.created_at, n.is_visibility, n.image, u.login
+	rows, err := r.db.Query(`SELECT n.uid, n.title, n.description, n.content, n.created_at, n.is_visibility, n.image, u.login, u.name
 FROM news n
 INNER JOIN users u ON u.uid = n.user_id
 ORDER BY n.uid DESC;`)
@@ -27,7 +27,7 @@ ORDER BY n.uid DESC;`)
 	var newsList []news.News
 	for rows.Next() {
 		var n news.News
-		if err := rows.Scan(&n.ID, &n.Title, &n.Description, &n.Content, &n.CreatedAt, &n.IsVisibility, &n.Image, &n.User.Login); err != nil {
+		if err := rows.Scan(&n.ID, &n.Title, &n.Description, &n.Content, &n.CreatedAt, &n.IsVisibility, &n.Image, &n.User.Login, &n.User.Name); err != nil {
 			return nil, err
 		}
 
