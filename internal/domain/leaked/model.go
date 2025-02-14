@@ -22,6 +22,7 @@ type Leaked struct {
 	PayoutUnit  int                `json:"payout_unit"`
 	Builder     int                `json:"builder"`
 	Publish     int                `json:"publish"`
+	IsAccept    int                `json:"is_accept"`
 
 	CreatedAtStr string `json:"created_at"`
 	ExpiresStr   string `json:"expires"`

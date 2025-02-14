@@ -28,6 +28,25 @@ func (h *Handler) GetAllNews(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+func (h *Handler) GetAllNewsGhost(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodGet)
+
+	newsList, err := h.newsService.GetAllGhost()
+	if err != nil {
+		http.Error(w, "Error fetching news "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonData, err := json.Marshal(newsList)
+	if err != nil {
+		http.Error(w, "Error marshaling news", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
 func (h *Handler) GetNewsByID(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodGet)
 
@@ -80,12 +99,12 @@ func (h *Handler) CreateNews(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateNews(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodPut)
 
-	vars := mux.Vars(r)
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		http.Error(w, "Invalid news ID", http.StatusBadRequest)
-		return
-	}
+	// vars := mux.Vars(r)
+	// id, err := strconv.ParseInt(vars["id"], 10, 64)
+	// if err != nil {
+	// 	http.Error(w, "Invalid news ID", http.StatusBadRequest)
+	// 	return
+	// }
 
 	var updatedNews news.News
 	if err := json.NewDecoder(r.Body).Decode(&updatedNews); err != nil {
@@ -93,9 +112,7 @@ func (h *Handler) UpdateNews(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedNews.ID = id
-
-	err = h.newsService.UpdateNews(updatedNews)
+	err := h.newsService.UpdateNews(updatedNews)
 	if err != nil {
 		http.Error(w, "Error updating news", http.StatusInternalServerError)
 		return

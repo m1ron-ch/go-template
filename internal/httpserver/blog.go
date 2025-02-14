@@ -24,7 +24,7 @@ func (h *Handler) Blog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currLeaked.Publish = 1
+	currLeaked.IsAccept = 0
 	err = h.leakedService.Update(currLeaked)
 	if err != nil {
 		http.Error(w, "Error update leaked by id "+err.Error(), http.StatusBadRequest)

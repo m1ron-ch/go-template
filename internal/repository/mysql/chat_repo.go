@@ -17,17 +17,19 @@ func NewChatRepository(db *sql.DB) chat.Repository {
 }
 
 func (r *ChatRepository) CreateChat(name string, owner_id, leaked_id int) (int64, error) {
-	var newID int64
-	var query string
+	var res sql.Result
+	var err error
+
 	if leaked_id > 0 {
-		query = `INSERT INTO chats (name, owner_id, leaked_id) VALUES (?, ?, ?) RETURNING id`
-		err := r.db.QueryRow(query, name, owner_id, leaked_id).Scan(&newID)
-		return newID, err
+		res, err = r.db.Exec("INSERT INTO chats (name, owner_id, leaked_id) VALUES (?, ?, ?)", name, owner_id, leaked_id)
 	} else {
-		query = `INSERT INTO chats (name, owner_id) VALUES (?, ?) RETURNING id`
-		err := r.db.QueryRow(query, name, owner_id).Scan(&newID)
-		return newID, err
+		res, err = r.db.Exec("INSERT INTO chats (name, owner_id) VALUES (?, ?)", name, owner_id)
 	}
+	if err != nil {
+		return 0, err
+	}
+
+	return res.LastInsertId()
 }
 
 // GetChatByID fetches a single chat by ID
@@ -50,15 +52,16 @@ func (r *ChatRepository) GetAllChats(user *user.User) ([]chat.Chat, error) {
 	var query string
 	if user.RoleID == 1 {
 		query = `SELECT c.id, c.name, c.created_at, m.content AS last_message
-	FROM chats c
-	LEFT JOIN messages m 
-			ON m.id = (
-					SELECT m2.id
-					FROM messages m2
-					WHERE m2.chat_id = c.id
-					ORDER BY m2.id DESC
-					LIMIT 1
-			);`
+		FROM chats c
+		LEFT JOIN messages m 
+				ON m.id = (
+						SELECT m2.id
+						FROM messages m2
+						WHERE m2.chat_id = c.id
+						ORDER BY m2.id DESC
+						LIMIT 1
+				)
+		ORDER BY id DESC;`
 	} else {
 		query = fmt.Sprintf(`SELECT c.id, c.name, c.created_at, m.content AS last_message
 		FROM chats c
@@ -136,10 +139,11 @@ func (r *ChatRepository) DeleteChat(chatID int64) error {
 
 // CreateMessage creates a new message in a given chat
 func (r *ChatRepository) CreateMessage(chatID, senderID int64, content string) (int64, error) {
-	var newID int64
-	query := `INSERT INTO messages (chat_id, sender_id, content) VALUES (?,?,?) RETURNING id`
-	err := r.db.QueryRow(query, chatID, senderID, content).Scan(&newID)
-	return newID, err
+	result, err := r.db.Exec("INSERT INTO messages (chat_id, sender_id, content) VALUES (?,?,?)", chatID, senderID, content)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
 }
 
 // EditMessage updates message content (if not deleted)

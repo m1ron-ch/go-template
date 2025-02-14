@@ -12,5 +12,7 @@ export const ROUTES = {
   USERS: '/admin/users',
   SETTINGS: '/admin/settings',
   CONTACT_US: '/admin/contact_us',
-  CHATS: '/admin/chats'
+  CHATS: '/admin/chats',
+  AWAITING_PUBLICATION: '/admin/awaiting-publication',
+  FILES: '/admin/files'
 }

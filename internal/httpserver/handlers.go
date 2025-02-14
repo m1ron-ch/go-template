@@ -25,7 +25,7 @@ import (
 
 type Handler struct {
 	ChatManager    *manager.ChatManager
-	foldersService usedfolders.FoldersService
+	foldersService usedfolders.Service
 	leakedService  leaked.Service
 	editorService  editor.Service
 	chatService    chat.Service
@@ -34,7 +34,7 @@ type Handler struct {
 	config         *config.Config
 }
 
-func NewHandler(userSrv user.Service, newsSrv news.Service, chatSrv chat.Service, editorSrv editor.Service, leakedSrv leaked.Service, foldersSrv usedfolders.FoldersService, cfg *config.Config, chatMng *manager.ChatManager) *Handler {
+func NewHandler(userSrv user.Service, newsSrv news.Service, chatSrv chat.Service, editorSrv editor.Service, leakedSrv leaked.Service, foldersSrv usedfolders.Service, cfg *config.Config, chatMng *manager.ChatManager) *Handler {
 	return &Handler{
 		foldersService: foldersSrv,
 		ChatManager:    chatMng,
@@ -70,11 +70,11 @@ func (h *Handler) InitRoutes() *mux.Router {
 	api.HandleFunc("/contact_us", h.GetContactUs).Methods(http.MethodGet)
 	api.HandleFunc("/terms_and_conditions", h.GetTermsConditions).Methods(http.MethodGet)
 	api.HandleFunc("/order_service", h.GetOrderService).Methods(http.MethodGet)
-	api.HandleFunc("/news", h.GetAllNews).Methods(http.MethodGet)
 	api.HandleFunc("/news/{id}", h.GetNewsByID).Methods(http.MethodGet)
 	api.HandleFunc("/leakeds", h.GetAllLeakeds).Methods(http.MethodGet)
 	api.HandleFunc("/campaign", h.GetAllCampaing).Methods(http.MethodGet)
 	api.HandleFunc("/media", h.DisplayMedia).Methods(http.MethodGet)
+	api.HandleFunc("/news_list", h.GetAllNewsGhost).Methods(http.MethodGet)
 
 	api.HandleFunc("/leakeds_a", h.GetAllActiveLeakeds).Methods(http.MethodGet)
 	api.HandleFunc("/leakeds_u", h.GetAllUnACtiveLeakeds).Methods(http.MethodGet)
@@ -90,6 +90,7 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/users/edit/{id}", h.UpdateUser).Methods(http.MethodPut)
 	private.HandleFunc("/users/delete/{id}", h.DeleteUser).Methods(http.MethodDelete)
 
+	private.HandleFunc("/news", h.GetAllNews).Methods(http.MethodGet)
 	private.HandleFunc("/news", h.CreateNews).Methods(http.MethodPost)
 	private.HandleFunc("/news/{id}", h.UpdateNews).Methods(http.MethodPut)
 	private.HandleFunc("/news/{id}", h.DeleteNews).Methods(http.MethodDelete)
@@ -102,8 +103,8 @@ func (h *Handler) InitRoutes() *mux.Router {
 
 	private.HandleFunc("/chats_user/{id}", h.GetAllChatsByLeakedID).Methods(http.MethodGet)
 
-	private.HandleFunc("/chats/{id}/messages", h.GetAllMessagesByChat).Methods(http.MethodGet)
-	private.HandleFunc("/messages", h.CreateMessage).Methods(http.MethodPost)
+	api.HandleFunc("/chats/{id}/messages", h.GetAllMessagesByChat).Methods(http.MethodGet)
+	api.HandleFunc("/messages", h.CreateMessage).Methods(http.MethodPost)
 	private.HandleFunc("/messages/{id}", h.EditMessage).Methods(http.MethodPut)
 	private.HandleFunc("/messages/{id}", h.DeleteMessage).Methods(http.MethodDelete)
 
@@ -115,13 +116,20 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/leakeds/{id}", h.UpdateLeaked).Methods(http.MethodPut)
 	private.HandleFunc("/leakeds/{id}", h.DeleteLeaked).Methods(http.MethodDelete)
 
+	private.HandleFunc("/files", h.GetAllFiles).Methods(http.MethodGet)
+
 	private.HandleFunc("/campaign", h.CreateCampaing).Methods(http.MethodPost)
+
+	private.HandleFunc("/leaked-not-accepted", h.GetCountNotAccepted).Methods(http.MethodGet)
 
 	private.HandleFunc("/upload", h.UploadMediaHandle).Methods(http.MethodPost)
 
 	private.HandleFunc("/generate_archive", h.GenerateCompanyArchive).Methods(http.MethodPost)
 
 	private.HandleFunc("/blog", h.Blog).Methods(http.MethodPost)
+
+	private.HandleFunc("/leakeds/{id}/accept", h.LeakedAccepted).Methods(http.MethodPut)
+	private.HandleFunc("/leakeds/{id}/reject", h.LeakedReject).Methods(http.MethodPut)
 
 	router.HandleFunc("/ws/chat", h.chatWebSocket).Methods(http.MethodGet)
 

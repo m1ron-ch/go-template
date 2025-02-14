@@ -7,12 +7,15 @@ import {
   UsersPage,
   NewsPage,
   LeakedPageTabs,
+  MediaPage,
   // MetricaPage
 } from '@/pages'
 import { ChatsPage } from '@/pages/AdminPages/ChatsPage'
 import { ContactUs } from '@/pages/AdminPages/ContactUs'
 import { OrderService } from '@/pages/AdminPages/OrderService'
 import { TermsConditions } from '@/pages/AdminPages/TermsConditions'
+import { Awaiting } from '@/pages/AdminPages/Awaiting'
+import { FilesPage } from '@/pages/AdminPages/FilesPage'
 
 /**
  * ВАЖНО:
@@ -42,6 +45,11 @@ export const privateRoutes: RouteObject[] = [
   { path: 'terms-and-conditions', element: <TermsConditions /> },
 
   { path: 'contact_us', element: <ContactUs /> },
+
+  { path: 'awaiting-publication', element: <Awaiting /> },
+
+  { path: 'media', element: <MediaPage /> },
+  { path: 'files', element: <FilesPage /> },
 
   // Если нужно
   // { path: 'statistic', element: <MetricaPage /> },

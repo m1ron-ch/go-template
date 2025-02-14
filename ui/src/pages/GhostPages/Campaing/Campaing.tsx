@@ -14,12 +14,14 @@ import {
   Space,
   Popconfirm,
   DatePicker,
+  Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   PlusOutlined,
   DeleteOutlined,
   UploadOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
@@ -60,14 +62,15 @@ interface Campaign {
   user?: User;
   expires: string;
   logo_url?: string;
-  screenshots?: Screenshot[];
-  urls?: UrlItem[];
+  screenshots: Screenshot[];
+  urls: UrlItem[];
   payout?: number;
   payout_unit?: number;
   builder: number;
   company_name?: string; // В JSON встречается как company_name
   lastLogin?: string;    // Иногда бывает
   publish?: number;
+  is_accept: number;
 }
 
 const CampaignsDashboard: React.FC = () => {
@@ -219,57 +222,77 @@ const CampaignsDashboard: React.FC = () => {
   // ==============================
   const handleSave = async () => {
     try {
+      // 1) Валидируем/считываем поля из editForm
       const editValues = await editForm.validateFields();
-
+  
+      // 2) Считываем (при желании валидируем) поля из blogForm
+      // Если хотим обязательно валидировать блог, используем validateFields().
+      // Если поля блога не всегда обязательны, можно просто getFieldsValue().
+      const blogValues = blogForm.getFieldsValue();
+  
+      // Преобразуем дату
       const expiresStr = editValues.expire
         ? editValues.expire.toISOString()
         : null;
-
-      // Если создаём новую кампанию:
+  
+      // Создаём или редактируем?
       const isNew = !selectedCampaign;
-
-      // Формируем данные под бэкенд
-      const newData: Campaign = {
-        // Если редактируем — оставляем тот же id. Если новой нет, можно 0.
+  
+      // Собираем финальный объект для бэкенда,
+      // часть полей берем из editForm, часть из blogForm.
+      const newData = {
+        // id, status и т.п. берём из выбранной кампании, если есть
         id: selectedCampaign?.id ?? 0,
         status: selectedCampaign?.status || 0,
-        blog: selectedCampaign?.blog || "", // при необходимости
-        created_at: "",
-        description: selectedCampaign?.description || "",
+  
+        // blog: берём из блога (blogText)
+        blog: blogValues.blogText || selectedCampaign?.blog || "",
+  
+        // description: берём из блога (blogDescription)
+        description:
+          blogValues.blogDescription || selectedCampaign?.description || "",
+  
+        // Лого и скриншоты тоже берём из локального состояния
+        // (так же, как у вас уже сделано)
         logo_url: localLogoUrl || selectedCampaign?.logo_url || "",
-        screenshots: localScreenshots.length
-          ? localScreenshots
-          : selectedCampaign?.screenshots || [],
-        urls: disclosures.length
-          ? disclosures
-          : selectedCampaign?.urls || [],
-        user: selectedCampaign
-        ? selectedCampaign.user
-        : {
-            user_id: user?.user_id || 0,
-            id: user?.user_id || 0,
-            name: user?.name || "",
-            login: user?.login || "",
-            role_id: user?.role_id || 0,
-            status_id: user?.status_id || 0,
-          },
+        screenshots:
+          localScreenshots.length > 0
+            ? localScreenshots
+            : selectedCampaign?.screenshots || [],
+        urls:
+          disclosures.length > 0 ? disclosures : selectedCampaign?.urls || [],
+  
+        // Поля из формы редактирования (editValues)
         payout: Number(editValues.payoutValue || 0),
         payout_unit: Number(editValues.payoutUnit || 0),
         website: editValues.website || "",
-        company_name: editValues.company_name || "",
+        company_name:
+          editValues.company_name || blogValues.blogCompanyName || "",
         builder: selectedCampaign?.builder || 0,
         expires: expiresStr || "",
-        lastLogin: selectedCampaign?.lastLogin || "",
+  
+        // Переиспользуем user, если кампания уже есть.
+        // Или формируем из текущего авторизованного пользователя.
+        user: selectedCampaign
+          ? selectedCampaign.user
+          : {
+              user_id: user?.user_id || 0,
+              id: user?.user_id || 0,
+              name: user?.name || "",
+              login: user?.login || "",
+              role_id: user?.role_id || 0,
+              status_id: user?.status_id || 0,
+            },
       };
-
+  
       // Выбираем PUT или POST
       const method = isNew ? "POST" : "PUT";
       const url = isNew
         ? `${AppSettings.API_URL}/campaign`
         : `${AppSettings.API_URL}/leakeds/${selectedCampaign?.id}`;
-
-      console.log("Отправляем:", JSON.stringify(newData, null, 2));
-
+  
+      console.log("Отправляем на бекенд:", newData);
+  
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -279,7 +302,7 @@ const CampaignsDashboard: React.FC = () => {
       if (!response.ok) {
         throw new Error("Failed to save campaign");
       }
-
+  
       message.success(isNew ? "Campaign added!" : "Campaign updated!");
       setIsModalVisible(false);
       fetchCampaigns();
@@ -376,7 +399,7 @@ const CampaignsDashboard: React.FC = () => {
         const data = res.data;
         if (data.success === 1 && data.files?.length > 0) {
           const uploadedScreens = data.files.map((f: any) => ({
-            id: Date.now() + Math.random(),
+            id: Date.now(),
             image_url: f.url,
           }));
           setLocalScreenshots((prev) => [...prev, ...uploadedScreens]);
@@ -401,7 +424,7 @@ const CampaignsDashboard: React.FC = () => {
         logo_url: localLogoUrl,
         screenshots: localScreenshots,
         urls: disclosures,
-        publish: 1,
+        is_accept: 0,
       };
 
       const response = await fetch(
@@ -519,9 +542,36 @@ const CampaignsDashboard: React.FC = () => {
     },
     {
       title: "Blog",
-      dataIndex: "blog",
-      key: "blog",
-      ellipsis: true,
+      dataIndex: "is_accept",
+      key: "is_accept",
+      render: (_, c: Campaign) => {
+        let statusText = "";
+        let color = "";
+    
+        switch (c.is_accept) {
+          case 0:
+            statusText = "Pending";
+            color = "orange";
+            break;
+          case -1:
+            statusText = "Rejected";
+            color = "red";
+            break;
+          case 1:
+            statusText = "Accepted";
+            color = "green";
+            break;
+          case 2:
+            statusText = "Draft";
+            color = "gray";
+            break;
+          default:
+            statusText = "Unknown";
+            color = "gray";
+        }
+    
+        return <Tag color={color}>{statusText}</Tag>;
+      },
     },
     {
       title: "Expire",
@@ -602,14 +652,25 @@ const CampaignsDashboard: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={handleAddCampaign}
-        style={{ marginBottom: 16 }}
-      >
-        Add Campaign
-      </Button>
+      <Space>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleAddCampaign}
+          style={{ marginBottom: 16, background: 'rgb(0, 150, 20)' }}
+        >
+          Add Campaign
+        </Button>
+        <Button
+          type="primary"
+          icon={<ReloadOutlined />}
+          onClick={fetchCampaigns}
+          style={{ marginBottom: 16, background: 'rgb(17, 182, 39)' }}
+        >
+          Refresh
+        </Button>
+      </Space>
+
 
       <Table
         columns={columns}
@@ -629,22 +690,69 @@ const CampaignsDashboard: React.FC = () => {
               onChange={setActiveCardTab}
               defaultActiveKey="1"
             >
-              <TabPane tab="Overview" key="1">
-                <Descriptions title="Campaign Details" bordered column={1}>
-                  <Descriptions.Item label="Status">
-                    {selectedCampaign.status ? (
-                      <span style={{ color: "green" }}>Active</span>
-                    ) : (
-                      <span style={{ color: "red" }}>Locked</span>
+              <TabPane tab="Overview" key="1" disabled={!selectedCampaign}>
+                {selectedCampaign ? (
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="ID">{selectedCampaign.id}</Descriptions.Item>
+                    <Descriptions.Item label="Company Name">
+                      {selectedCampaign.company_name}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Description">
+                      {selectedCampaign.description}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Expires">
+                      {selectedCampaign.expires
+                        ? new Date(selectedCampaign.expires).toLocaleString()
+                        : "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Payout">
+                      {selectedCampaign.payout} / Unit: {selectedCampaign.payout_unit}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Created At">
+                      {new Date(selectedCampaign.created_at).toLocaleString()}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Logo URL">
+                      {selectedCampaign.logo_url ? (
+                        <img
+                          src={selectedCampaign.logo_url}
+                          alt="Logo"
+                          style={{ maxWidth: 200 }}
+                        />
+                      ) : (
+                        "N/A"
+                      )}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="URLs">
+                      {selectedCampaign.urls?.length > 0 ? (
+                        <ul>
+                          {selectedCampaign.urls.map((u) => (
+                            <li key={u.id}>
+                              <a href={u.url} target="_blank" rel="noreferrer">
+                                {u.url}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "No URLs"
+                      )}
+                    </Descriptions.Item>
+                    {selectedCampaign.screenshots?.length > 0 && (
+                      <Descriptions.Item label="Screenshots">
+                        {selectedCampaign.screenshots.map((scr) => (
+                          <img
+                            key={scr.id}
+                            src={scr.image_url}
+                            alt="Screenshot"
+                            style={{ width: 120, marginRight: 8 }}
+                          />
+                        ))}
+                      </Descriptions.Item>
                     )}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Expire">
-                    {selectedCampaign.expires}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Created">
-                    {selectedCampaign.created_at}
-                  </Descriptions.Item>
-                </Descriptions>
+                  </Descriptions>
+                ) : (
+                  <p>No data to show.</p>
+                )}
               </TabPane>
 
               {/* 2) Builder с кнопкой Generate Builds */}

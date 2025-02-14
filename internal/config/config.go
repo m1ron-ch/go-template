@@ -15,6 +15,8 @@ type Config struct {
 	ServerConfig ServerConfig `yaml:"server"`
 	DBConfig     DBConfig     `yaml:"database"`
 	JWTSecret    string       `yaml:"jwt_secret"`
+	URL1         string       `yaml:"url_1"`
+	URL2         string       `yaml:"url_2"`
 }
 
 type ServerConfig struct {

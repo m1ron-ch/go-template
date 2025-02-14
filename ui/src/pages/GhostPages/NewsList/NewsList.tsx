@@ -35,7 +35,7 @@ export const NewsList: React.FC = () => {
   const fetchNews = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${AppSettings.API_URL}/news`, {
+      const response = await fetch(`${AppSettings.API_URL}/news_list`, {
         method: 'GET',
         credentials: 'include',
       })

@@ -2,26 +2,51 @@ package mysql
 
 import (
 	"database/sql"
-	"errors"
+	usedfolders "main/internal/domain/used_folders"
 )
 
 type UsedFoldersRepo interface {
+	GetAll() ([]usedfolders.File, error)
 	IsFolderUsed(folderName string) (bool, error)
 	InsertUsedFolder(userID int, folderName string) (int, error)
 	// Опционально: метод для освобождения папки, если понадобится
 	// DeleteUsedFolder(folderName string) error
 }
 
-type usedFoldersRepoPG struct {
+type usedFoldersRepository struct {
 	db *sql.DB
 }
 
-func NewUsedFoldersRepoPG(db *sql.DB) UsedFoldersRepo {
-	return &usedFoldersRepoPG{db: db}
+func NewUsedFoldersRepoPG(db *sql.DB) usedfolders.Repository {
+	return &usedFoldersRepository{db: db}
+}
+
+func (r *usedFoldersRepository) GetAll() ([]usedfolders.File, error) {
+	rows, err := r.db.Query(`SELECT f.id, f.folder_name, f.archive_number, f.status, f.created_at, u.login, l.company_name, l.website
+		FROM used_folders f
+		INNER JOIN users u ON u.uid = f.user_id
+		INNER JOIN leaked l ON l.id = f.leaked_id
+		ORDER BY f.id DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var files []usedfolders.File
+	for rows.Next() {
+		var f usedfolders.File
+		if err := rows.Scan(&f.ID, &f.FolderName, &f.ArchiveNumber, &f.Status, &f.CreatedAt, &f.User.Login, &f.Leaked.CompanyName, &f.Leaked.Website); err != nil {
+			return nil, err
+		}
+
+		files = append(files, f)
+	}
+
+	return files, nil
 }
 
 // Проверка: занята ли папка (есть ли в used_folders запись с таким именем)
-func (r *usedFoldersRepoPG) IsFolderUsed(folderName string) (bool, error) {
+func (r *usedFoldersRepository) IsFolderUsed(folderName string) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`
         SELECT COUNT(*) 
@@ -34,27 +59,33 @@ func (r *usedFoldersRepoPG) IsFolderUsed(folderName string) (bool, error) {
 	return count > 0, nil
 }
 
-// Добавление новой записи о «занятой» папке
-func (r *usedFoldersRepoPG) InsertUsedFolder(userID int, folderName string) (int, error) {
-	used, err := r.IsFolderUsed(folderName)
+func (r *usedFoldersRepository) GetMaxArchiveNumber() (int, error) {
+	var maxNum sql.NullInt64
+	err := r.db.QueryRow(`SELECT COALESCE(MAX(archive_number), 0) FROM used_folders`).Scan(&maxNum)
 	if err != nil {
 		return 0, err
 	}
-	if used {
-		return 0, errors.New("folder already used")
+	if !maxNum.Valid {
+		return 0, nil
 	}
+	return int(maxNum.Int64), nil
+}
 
-	var insertedID int
+// Добавление новой записи о «занятой» папке
+func (r *usedFoldersRepository) InsertUsedFolder(userID int, folderName string, leakedID int, archiveNumber int) (int, error) {
 	query := `
-        INSERT INTO used_folders (user_id, folder_name)
-        VALUES ($1, $2)
-        RETURNING id
+        INSERT INTO used_folders (user_id, folder_name, leaked_id, archive_number) 
+        VALUES (?, ?, ?, ?)
     `
-	err = r.db.QueryRow(query, userID, folderName).Scan(&insertedID)
+	result, err := r.db.Exec(query, userID, folderName, leakedID, archiveNumber)
 	if err != nil {
 		return 0, err
 	}
-	return insertedID, nil
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(lastID), nil
 }
 
 // Опционально:

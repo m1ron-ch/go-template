@@ -21,3 +21,16 @@
   display: flex;
   align-items: center;
 }
+
+.menu {
+  // Переопределяем стиль для ссылки внутри элемента меню
+  .ant-menu-item a,
+  .ant-menu-submenu-title {
+    color: white !important;
+  }
+  
+  // Если нужно изменить цвет активного пункта
+  .ant-menu-item-selected a {
+    color: white !important;
+  }
+}

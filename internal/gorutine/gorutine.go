@@ -16,7 +16,8 @@ func StartNewsPublisher(leakedService leaked.Service) {
 }
 
 func PublishScheduledLeaked(leakedService leaked.Service) {
-	now := time.Now()
+	now := time.Now().UTC()
+
 	leakedList, err := leakedService.GetAll()
 	if err != nil {
 		log.Println("Failed to retrieve scheduled leaked:", err)
@@ -25,8 +26,20 @@ func PublishScheduledLeaked(leakedService leaked.Service) {
 
 	for i := range leakedList {
 		l := &leakedList[i]
-		if l.Expires != nil && (l.Expires.Before(now) || l.Expires.Equal(now)) {
+
+		// Сначала проверяем, что l.Expires не nil
+		if l.Expires == nil {
+			// Если нет даты, можно пропустить или обработать по-другому
+			continue
+		}
+
+		// Теперь можно безопасно вызывать l.Expires.UTC()
+		before := l.Expires.UTC().Before(now)
+		equal := l.Expires.UTC().Equal(now)
+
+		if before || equal {
 			l.Status = 1
+			l.ExpiresStr = ""
 			err := leakedService.Update(l)
 			if err != nil {
 				log.Println("Failed to publish leaked ID:", l.ID, "Error:", err)

@@ -53,7 +53,7 @@ func main() {
 	leakedRepo := mysql.NewLeakedRepository(db.DB)
 	leakedService := leaked.NewLeakedService(leakedRepo)
 
-	gorutine.PublishScheduledLeaked(leakedService)
+	gorutine.StartNewsPublisher(leakedService)
 
 	// 5. Создаём наше "приложение" (Application)
 	application := app.NewApplication(cfg, userService, newsService, chatService, editorService, folderService, leakedService, cm)

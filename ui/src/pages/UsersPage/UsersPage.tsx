@@ -373,7 +373,7 @@ export const UsersPage: React.FC = () => {
             <Select defaultValue={2}>
               {user?.role_id === 1 ? (
                 <>
-                  <Select.Option value={1}>Admin</Select.Option>
+                  {/* <Select.Option value={1}>Admin</Select.Option> */}
                   <Select.Option value={2}>User</Select.Option>
                 </>
               ) : (

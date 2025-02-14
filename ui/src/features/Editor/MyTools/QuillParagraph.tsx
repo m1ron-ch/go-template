@@ -3,12 +3,13 @@ import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Editor as TinyMCEEditor } from '@tinymce/tinymce-react';
 import { Card, List, Modal, Spin } from 'antd';
+import { AppSettings } from '@/shared';
 
 interface MediaItem {
   upload_date: string;
   filename: string;
   s_url: string;
-  url: string;      // Полный URL к картинке
+  url: string;      // Full URL to the image
   type: string;     // "image"
 }
 
@@ -57,38 +58,38 @@ const TinyMCEComponent: React.FC<TinyMCEComponentProps> = ({ data, onChange }) =
   const [loadingMedia, setLoadingMedia] = useState(false);
   const [editorLoading, setEditorLoading] = useState(true);
 
-  // Храним колбэк TinyMCE, чтобы потом вызвать cb(url) при выборе картинки
+  // Store TinyMCE callback to call cb(url) after selecting an image
   const [filePickerCallback, setFilePickerCallback] = useState<
     ((url: string, meta?: { alt?: string }) => void) | null
   >(null);
 
-  // Загружаем список изображений с бэкенда
+  // Load the list of images from the backend
   const fetchMedia = async () => {
     setLoadingMedia(true);
     try {
-      const res = await fetch('/api/media');
+      const res = await fetch(`${AppSettings.API_URL}/media`);
       const data = await res.json();
       if (Array.isArray(data.data)) {
         setMediaList(data.data);
       }
     } catch (error) {
-      console.error('Ошибка загрузки списка изображений', error);
+      console.error('Error loading image list', error);
     }
     setLoadingMedia(false);
   };
 
-  // При первом открытии модалки грузим список изображений
+  // Load the image list when the modal is opened
   useEffect(() => {
     if (isModalOpen) {
       fetchMedia();
     }
   }, [isModalOpen]);
 
-  // Когда пользователь кликает по изображению:
+  // When the user clicks on an image:
   const handleSelectImage = (url: string) => {
     if (filePickerCallback) {
-      // передаём ссылку обратно в TinyMCE
-      filePickerCallback(url, { alt: 'Моё описание' });
+      // Pass the URL back to TinyMCE
+      filePickerCallback(url, { alt: 'My description' });
     }
     setIsModalOpen(false);
   };
@@ -119,52 +120,26 @@ const TinyMCEComponent: React.FC<TinyMCEComponentProps> = ({ data, onChange }) =
           ],
           toolbar: 'undo redo | bold italic | image | link | ...',
 
-          // 1) Основная магия: при клике "добавить изображение" 
-          //    открываем свою модалку, а не стандартный file-picker.
+          // 1) Main logic: when clicking "add image"
+          //    we open our custom modal instead of the standard file picker.
           file_picker_callback: (cb, _, meta) => {
             if (meta.filetype === 'image') {
-              // Сохраняем колбэк TinyMCE, чтобы после выбора картинки вернуть туда URL
+              // Store TinyMCE callback to return the URL after selecting an image
               setFilePickerCallback(() => cb);
-              // Открываем модалку
+              // Open the modal
               setIsModalOpen(true);
             }
           },
 
           init_instance_callback: () => {
-            // Тут ваш код, убираем лоадер
+            // Custom logic, removing the loader
             setEditorLoading(false);
           },
-
-          // // 2) При вставке изображения через drag'n'drop 
-          // //    (или кнопку Upload) можно задать images_upload_handler, если нужно
-          // images_upload_handler: async (
-          //   blobInfo, 
-          //   progress, 
-
-          // ) => {
-          //   try {
-          //     const formData = new FormData();
-          //     formData.append('file', blobInfo.blob(), blobInfo.filename());
-          
-          //     const res = await fetch('/api/upload-image', {
-          //       method: 'POST',
-          //       body: formData,
-          //     });
-          
-          //     if (!res.ok) {
-          //       throw new Error('Ошибка загрузки на сервер');
-          //     }
-          
-          //     const { url } = await res.json();
-          //   } catch (err: any) {
-
-          //   }
-          // },
         }}
       />
 
       <Modal
-        title="Выберите изображение"
+        title="Select an image"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
@@ -172,7 +147,7 @@ const TinyMCEComponent: React.FC<TinyMCEComponentProps> = ({ data, onChange }) =
         zIndex={99999}
       >
         {loadingMedia ? (
-          <Spin tip="Загрузка изображений..." />
+          <Spin tip="Loading images..." />
         ) : (
           <List
             grid={{ gutter: 16, column: 4 }}
@@ -184,7 +159,7 @@ const TinyMCEComponent: React.FC<TinyMCEComponentProps> = ({ data, onChange }) =
                   cover={
                     <img
                       alt={item.filename}
-                      src={item.url}  // полная ссылка
+                      src={item.url}
                       style={{ objectFit: 'cover', height: 120 }}
                     />
                   }

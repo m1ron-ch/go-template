@@ -135,7 +135,7 @@ const AwaitingPublicationPage: React.FC = () => {
           <Card
             key={leaked.id}
             hoverable
-            style={{ width: 350 }}
+            style={{ width: 350, backgroundColor: ' #a5d6a7)' }}
             cover={
               leaked.logo_url ? (
                 <img
@@ -144,7 +144,7 @@ const AwaitingPublicationPage: React.FC = () => {
                   style={{
                     height: 220,
                     objectFit: "contain",
-                    background: "white",
+                    background: 'linear-gradient(135deg,rgb(193, 223, 159), #a5d6a7)'
                   }}
                 />
               ) : null

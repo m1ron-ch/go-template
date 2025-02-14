@@ -15,6 +15,8 @@ import {
   Row,
   Col,
   DatePicker,
+  Empty,
+  Tag,
 } from "antd";
 import {
   UploadOutlined,
@@ -22,6 +24,7 @@ import {
   PlusOutlined,
   EyeOutlined,
   EditOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment"; // or dayjs
@@ -67,6 +70,8 @@ interface Leaked {
   urls: UrlItem[];
   payout: number;
   payout_unit: number;
+  publish: number;
+  is_accept: number;
 }
 
 // -------------------------
@@ -86,6 +91,7 @@ export const LeakedPageTabs: React.FC = () => {
   const [localScreenshots, setLocalScreenshots] = useState<Screenshot[]>([]);
 
   const [user, setUser] = useState<User | null>(null);
+  // const now = useMemo(() => moment(), []);
 
   useEffect(() => {
     fetchLeakedData();
@@ -97,8 +103,19 @@ export const LeakedPageTabs: React.FC = () => {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch leaked data");
+  
+      // Получаем данные с сервера
       const data: Leaked[] = await response.json();
-      setLeakeds(data);
+  
+      // Преобразуем поле expires для каждого элемента
+      const transformedData = data.map((item) => ({
+        ...item,
+        expires: item.expires
+          ? moment.utc(item.expires).local().format("YYYY-MM-DD HH:mm:ss")
+          : null,
+      }));
+  
+      setLeakeds(transformedData);
     } catch (error) {
       console.error("Error fetching leaked data:", error);
       message.error("Failed to fetch leaked data.");
@@ -200,38 +217,43 @@ export const LeakedPageTabs: React.FC = () => {
   // --------------------------------------
   const handleSave = async () => {
     try {
-      const values = await form.validateFields();
-      const expiresStr = values.expiration ? values.expiration.toISOString() : null;
+      // Получаем значения из формы редактирования
+      const mainValues = await form.validateFields();
+      // Получаем значения из формы блога
+      // Если нужно, можно провести валидацию createBlogForm, но можно и просто получить их.
+      const blogValues = createBlogForm.getFieldsValue();
   
-      // Собираем полный объект данных для отправки
-      let fullPayload: Leaked = {
+      const expiresStr = mainValues.expiration
+        ? mainValues.expiration.toISOString()
+        : null;
+  
+      // Собираем полный объект данных для отправки,
+      // объединяя данные из обеих форм.
+      let fullPayload = {
         id: selectedLeaked ? selectedLeaked.id : 0,
         status: selectedLeaked ? selectedLeaked.status : 0,
-        blog: selectedLeaked ? selectedLeaked.blog : "",
-        created_at: selectedLeaked ? selectedLeaked.created_at : new Date().toISOString(),
-        company_name: values.company_name,
-        description: values.description || selectedLeaked?.description || "",
-        website: values.website || null,
-        user: selectedLeaked
-          ? selectedLeaked.user
-          : {
-              user_id: user?.user_id || 0,
-              name: user?.name || "",
-              login: user?.login || "",
-              role_id: user?.role_id || 0,
-              status_id: user?.status_id || 0,
-            },
+        blog: blogValues.blogText || selectedLeaked?.blog || "",
+        created_at: selectedLeaked
+          ? selectedLeaked.created_at
+          : new Date().toISOString(),
+        // Берём company_name либо из основной формы, либо из блога, если необходимо
+        company_name: mainValues.company_name || blogValues.blogCompanyName || "",
+        description:
+          blogValues.blogDescription ||
+          selectedLeaked?.description ||
+          "",
+        website: mainValues.website || null,
+        user: { id: user?.user_id },
         expires: expiresStr,
         logo_url: localLogoUrl, // Лого теперь отправляется
         screenshots: localScreenshots, // Отправляем загруженные скриншоты
         urls: disclosures, // Отправляем disclosure ссылки
-        payout: Number(values.payout_value || 0),
-        payout_unit: Number(values.payout_unit || 0),
+        payout: Number(mainValues.payout_value || 0),
+        payout_unit: Number(mainValues.payout_unit || 0),
+        is_accept: 1,
       };
   
       console.log("Sending payload:", JSON.stringify(fullPayload, null, 2));
-
-      console.log(JSON.stringify(fullPayload));
   
       const method = selectedLeaked ? "PUT" : "POST";
       const endpoint = selectedLeaked
@@ -249,7 +271,9 @@ export const LeakedPageTabs: React.FC = () => {
         throw new Error("Failed to save data");
       }
   
-      message.success(selectedLeaked ? "Leak updated successfully" : "Leak added successfully");
+      message.success(
+        selectedLeaked ? "Leak updated successfully" : "Leak added successfully"
+      );
       setIsModalVisible(false);
       fetchLeakedData();
     } catch (error) {
@@ -356,7 +380,6 @@ export const LeakedPageTabs: React.FC = () => {
 
     try {
       const blogValues = await createBlogForm.validateFields();
-      // Merge them into a FULL object that includes all fields
       const updated: Leaked = {
         ...selectedLeaked,
         blog: blogValues.blogText || "",
@@ -365,6 +388,7 @@ export const LeakedPageTabs: React.FC = () => {
         logo_url: localLogoUrl,
         screenshots: localScreenshots,
         urls: disclosures,
+        publish: 1,
       };
 
       const response = await fetch(
@@ -388,68 +412,140 @@ export const LeakedPageTabs: React.FC = () => {
     }
   };
 
+  const handleAccept = async (id: number) => {
+    try {
+      const response = await fetch(`${AppSettings.API_URL}/leakeds/${id}/accept`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ leaked_id: id }), // добавляем leakedID
+      });
+  
+      if (!response.ok) throw new Error("Failed to accept");
+  
+      message.success("Accept!");
+      fetchLeakedData(); // Обновляем список
+    } catch (error) {
+      message.error("Ошибка при принятии");
+      console.error(error);
+    }
+  };
+  
+  const handleReject = async (id: number) => {
+    try {
+      const response = await fetch(`${AppSettings.API_URL}/leakeds/${id}/reject`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ leaked_id: id }), // добавляем leakedID
+      });
+  
+      if (!response.ok) throw new Error("Failed to reject");
+  
+      message.success("Reject!");
+      fetchLeakedData(); // Обновляем список
+    } catch (error) {
+      message.error("Ошибка при отклонении");
+      console.error(error);
+    }
+  };
+  
+
   // --------------------------------------
   // RENDER
   // --------------------------------------
   return (
     <div style={{ padding: "24px" }}>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={handleAddLeaked}
-        style={{ marginBottom: 16 }}
-      >
-        Add Leak
-      </Button>
+      <Space>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleAddLeaked}
+          style={{ marginBottom: 16 }}
+        >
+          Add Leak
+        </Button>
+        <Button
+          type="default"
+          icon={<ReloadOutlined />}
+          onClick={fetchLeakedData}
+          style={{ marginBottom: 16 }}
+        >
+          Refresh
+        </Button>
+      </Space>
+
 
       <Row gutter={[16, 16]}>
-        {leakeds.map((item) => (
-          <Col key={item.id} xs={24} sm={12} md={8} lg={6}>
-            <Card
-              hoverable
-              cover={
-                item.logo_url ? (
-                  <img
-                    src={item.logo_url}
-                    alt={item.company_name}
-                    style={{ height: 220, objectFit: "cover" }}
-                  />
-                ) : undefined
-              }
-              actions={[
-                <EyeOutlined key="view" onClick={() => handleViewLeaked(item)} />,
-                <EditOutlined key="edit" onClick={() => handleEditLeaked(item)} />,
-                <Popconfirm
-                  key="delete"
-                  title="Are you sure to delete this leak?"
-                  onConfirm={() => handleDeleteLeaked(item.id)}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <DeleteOutlined />
-                </Popconfirm>,
-              ]}
-            >
-              <h3>{item.company_name}</h3>
-              <p>
-                <strong>Description:</strong>{" "}
-                {item.description.length > 60
-                  ? item.description.substring(0, 60) + "..."
-                  : item.description}
-              </p>
-              <p>
-                <strong>Expires:</strong>{" "}
-                {item.expires
-                  ? new Date(item.expires).toLocaleString()
-                  : "No expiration"}
-              </p>
-              <p>
-                <strong>Payout:</strong> {item.payout} (
-                {["K", "M", "B"][item.payout_unit] || "?"})
-              </p>
-            </Card>
+        {leakeds && leakeds.length > 0 ? (
+          leakeds.map((item) => (
+            <Col key={item.id} xs={24} sm={12} md={8} lg={6}>
+              <Card
+                hoverable
+                cover={
+                  item.logo_url ? (
+                    <img
+                      src={item.logo_url}
+                      alt={item.company_name}
+                      style={{ height: 220, objectFit: "cover" }}
+                    />
+                  ) : undefined
+                }
+                actions={[
+                  <EyeOutlined key="view" onClick={() => handleViewLeaked(item)} />,
+                  <EditOutlined key="edit" onClick={() => handleEditLeaked(item)} />,
+                  <Popconfirm
+                    key="delete"
+                    title="Are you sure to delete this leak?"
+                    onConfirm={() => handleDeleteLeaked(item.id)}
+                    okText="Yes"
+                    cancelText="No"
+                  >
+                    <DeleteOutlined />
+                  </Popconfirm>,
+                ]}
+              >
+                <h3>{item.company_name}</h3>
+                <p>
+                  <strong>Company name:</strong>{" "}
+                  {item.company_name.length > 60
+                    ? item.company_name.substring(0, 60) + "..."
+                    : item.company_name}
+                </p>
+                <p>
+                  <strong>Expires:</strong>{" "}
+                  {item.expires
+                    ? new Date(item.expires).toLocaleString()
+                    : "No expiration"}
+                </p>
+                <p>
+                  <strong>Payout:</strong> {item.payout} (
+                  {["K", "M", "B"][item.payout_unit] || "?"})
+                </p>
+                <p>
+                  <strong>Blog:</strong> {" "} 
+                  {item.publish == 1 ? <Tag color={'green'}> {'Publish'} </Tag> : <Tag color={'gray'}> {'Draft'} </Tag>}
+                </p>
+                {item.is_accept == 0 && item.user.role_id != 1 && (
+                  <div>
+                    <Space>
+                      <Button type="primary" onClick={() => handleAccept(item.id)}>
+                        Accepted
+                      </Button>
+                      <Button danger onClick={() => handleReject(item.id)}>
+                        Reject
+                      </Button>
+                    </Space>
+                  </div>
+                )}
+              </Card>
+            </Col>
+          ))
+        ) : (
+          <Col span={24} style={{ textAlign: "center", padding: "50px 0" }}>
+            <Empty description="Empty" />
           </Col>
-        ))}
+        )}
       </Row>
 
       <Modal
@@ -552,13 +648,13 @@ export const LeakedPageTabs: React.FC = () => {
               </Form.Item>
 
               <Form.Item label="Expiration" name="expiration">
-                <DatePicker
-                  showTime
-                  format="YYYY-MM-DD HH:mm:ss"
-                  style={{ width: "100%" }}
-                  disabledDate={(current) => current && current < moment()}
-                  placeholder="Select date/time"
-                />
+              <DatePicker
+                showTime
+                format="YYYY-MM-DD HH:mm:ss"
+                style={{ width: "100%" }}
+                // disabledDate={(current) => current && current < now}
+                placeholder="Select date/time"
+              />
               </Form.Item>
 
               <Form.Item label="Target Payout (USD)">

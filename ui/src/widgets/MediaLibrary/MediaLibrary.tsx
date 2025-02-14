@@ -7,7 +7,6 @@ import {
   message,
   Modal,
   Spin,
-  Pagination,
   Space,
   Tooltip,
   Upload,
@@ -34,15 +33,12 @@ interface MediaItem {
 
 export const MediaLibrary: React.FC = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(30);
-  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchMedia = async (page: number, limit: number) => {
+  const fetchMedia = async () => {
     try {
       const response = await fetch(
-        `${AppSettings.API_URL}media?page=${page}&limit=${limit}`,
+        `${AppSettings.API_URL}/media`,
         { credentials: 'include' }
       );
   
@@ -50,10 +46,9 @@ export const MediaLibrary: React.FC = () => {
         throw new Error('Failed to fetch media');
       }
   
-      const data: { data: MediaItem[] | null; total: number } = await response.json();
+      const data: { data: MediaItem[] } = await response.json();
   
       setMediaItems(data.data || []);
-      setTotalItems(data.total || 0);
     } catch (error) {
       console.error('Error fetching media:', error);
       message.error('Не удалось загрузить медиафайлы.');
@@ -63,8 +58,8 @@ export const MediaLibrary: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchMedia(currentPage, pageSize);
-  }, [currentPage]);
+    fetchMedia();
+  }, []);
 
   const confirmDelete = (index: number, filename: string) => {
     Modal.confirm({
@@ -79,7 +74,7 @@ export const MediaLibrary: React.FC = () => {
 
   const onRemoveMediaItem = async (index: number, filename: string) => {
     try {
-      const response = await fetch(`${AppSettings.API_URL}media/delete`, {
+      const response = await fetch(`${AppSettings.API_URL}/media/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +90,6 @@ export const MediaLibrary: React.FC = () => {
       const newMediaItems = [...mediaItems];
       newMediaItems.splice(index, 1);
       setMediaItems(newMediaItems);
-      setTotalItems((prevTotal) => prevTotal - 1);
       message.success('Медиафайл успешно удален');
     } catch (error) {
       console.error('Error deleting media item:', error);
@@ -113,15 +107,6 @@ export const MediaLibrary: React.FC = () => {
     }
   };
 
-  const onPageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchMedia(page, pageSize);
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
   const customUpload = async (options: any) => {
     const { onSuccess, onError, file } = options;
 
@@ -137,7 +122,7 @@ export const MediaLibrary: React.FC = () => {
 
       if (response.ok) {
         onSuccess(null, file);
-        fetchMedia(currentPage, pageSize);
+        fetchMedia();
       } else {
         onError('Error uploading file');
       }
@@ -229,13 +214,6 @@ export const MediaLibrary: React.FC = () => {
                 </Card>
               </List.Item>
             )}
-          />
-          <Pagination
-            className={s.pagination}
-            current={currentPage}
-            pageSize={pageSize}
-            total={totalItems}
-            onChange={onPageChange}
           />
         </>
       )}

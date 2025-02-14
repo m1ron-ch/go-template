@@ -17,7 +17,7 @@ type Application struct {
 	ChatManager    *manager.ChatManager
 	Config         *config.Config
 	leakedService  leaked.Service
-	foldersService usedfolders.FoldersService
+	foldersService usedfolders.Service
 	editorService  editor.Service
 	userService    user.Service
 	newsService    news.Service
@@ -25,7 +25,7 @@ type Application struct {
 }
 
 func NewApplication(cfg *config.Config, userSrv user.Service, newsSrv news.Service, chatSrv chat.Service, editorSrv editor.Service,
-	foldersSrv usedfolders.FoldersService, leakedSrv leaked.Service, chatManager *manager.ChatManager) *Application {
+	foldersSrv usedfolders.Service, leakedSrv leaked.Service, chatManager *manager.ChatManager) *Application {
 	return &Application{
 		ChatManager:    chatManager,
 		Config:         cfg,

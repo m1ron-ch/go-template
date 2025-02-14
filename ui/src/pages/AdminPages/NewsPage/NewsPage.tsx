@@ -50,6 +50,9 @@ interface News {
   publish_date: string
   date: string
   time: string
+  json: string
+  preview: string
+  content: string
 }
 
 interface User {
@@ -75,8 +78,8 @@ interface EditorData {
   /** title, preview, content (html/json) */
   title: string
   preview: string
-  content_html: string
-  content_json: string
+  content: string
+  json: string
 }
 
 interface EditorHandle {
@@ -186,8 +189,8 @@ export const NewsPage = () => {
       setIsVisibility(data.is_visibility ? 1 : 0)
       setNewsType(data.type)
       setContent({
-        html: data.content_html || '',
-        json: data.content_json ? JSON.parse(data.content_json) : { blocks: [] },
+        html: data.content || '',
+        json: data.json ? JSON.parse(data.json) : { blocks: [] },
       })
       setImage({
         url: `${data.image}`,
@@ -195,6 +198,8 @@ export const NewsPage = () => {
         filename: data.image,
         type: '',
       })
+
+      console.log(data);
 
       form.setFieldsValue({
         is_visibility: data.is_visibility ? 1 : 0,
@@ -297,13 +302,17 @@ export const NewsPage = () => {
 
     try {
       const payload = {
+        id: selectedNews?.id,
         is_visibility: form.getFieldValue('is_visibility') === 1,
         image: image.url,
         user_id: currUser?.user_id,
         title: form.getFieldValue('title') || '',
-        description: form.getFieldValue('preview') || '',
+        preview: form.getFieldValue('preview') || '',
         content: usedContent.html,
         json: JSON.stringify(usedContent.json),
+        user: {
+          id :currUser?.user_id
+        }
       }
 
       console.log(payload)
@@ -473,11 +482,14 @@ export const NewsPage = () => {
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully`)
         const response = info.file.response;
+
+        console.log(response);
         // Извлекаем URL из поля file.url, если оно есть, иначе пытаемся из response.url
-        const fileUrl = (response && response.file && response.file.url) || response.url || '';
+        const fileUrl = (response && response.files && response.files[0].url) || response.files[0].url || '';
+        console.log(fileUrl);
         // Обновляем состояние image
         setImage({
-          filename: response.filename, // можно сохранить оригинальное имя
+          filename: response.files[0].filename, // можно сохранить оригинальное имя
           url: fileUrl,
           type: '',
           upload_date: '',
@@ -620,7 +632,7 @@ export const NewsPage = () => {
           </Form.Item>
 
           <h3>Content</h3>
-          <Editor ref={editorRef} initialContent={content.json} />
+          <Editor ref={editorRef} initialContent={content?.json} />
         </Form>
       </Modal>
 

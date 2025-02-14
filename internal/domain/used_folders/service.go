@@ -1,60 +1,39 @@
 package usedfolders
 
 import (
-	"main/internal/repository/mysql"
-	"os"
-	"path/filepath"
-	"runtime"
+	"fmt"
 )
 
-type FoldersService interface {
-	GetFreeFolder() (string, error)
-	MarkFolderAsUsed(userID int, folderName string) (int, error)
+type Service interface {
+	GetAll() ([]File, error)
+	GetFreeFolder() (string, int, error) // Хотим вернуть и имя, и число
+	MarkFolderAsUsed(userID int, folderName string, leakedID, archiveNumber int) (int, error)
 }
 
-type foldersService struct {
-	usedRepo mysql.UsedFoldersRepo
-	// ... возможно, ещё зависимости
+type service struct {
+	repo Repository
 }
 
-func NewFoldersService(usedRepo mysql.UsedFoldersRepo) FoldersService {
-	return &foldersService{
-		usedRepo: usedRepo,
-	}
+func NewFoldersService(r Repository) Service {
+	return &service{repo: r}
 }
 
-// Простой пример: вернуть первую найденную "свободную" папку в /mnt
-func (s *foldersService) GetFreeFolder() (string, error) {
-	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
-	path := "/mnt"
-	rootPath := filepath.Join(basePath, path)
+func (s *service) GetAll() ([]File, error) {
+	return s.repo.GetAll()
+}
 
-	files, err := os.ReadDir(rootPath)
+// Вместо чтения /mnt:
+func (s *service) GetFreeFolder() (string, int, error) {
+	lastNum, err := s.repo.GetMaxArchiveNumber()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
-
-	for _, f := range files {
-		if f.IsDir() {
-			folderPath := filepath.Join(rootPath, f.Name())
-
-			used, err := s.usedRepo.IsFolderUsed(folderPath)
-			if err != nil {
-				return "", err
-			}
-
-			if !used {
-				// Это папка свободна
-				return folderPath, nil
-			}
-		}
-	}
-
-	// Если ничего не нашли — значит, свободных папок нет
-	return "", err
+	nextNum := lastNum + 1
+	// Формируем имя, например "archive_101"
+	folderName := fmt.Sprintf("archive_%d", nextNum)
+	return folderName, nextNum, nil
 }
 
-func (s *foldersService) MarkFolderAsUsed(userID int, folderName string) (int, error) {
-	return s.usedRepo.InsertUsedFolder(int(userID), folderName)
+func (s *service) MarkFolderAsUsed(userID int, folderName string, leakedID, archiveNumber int) (int, error) {
+	return s.repo.InsertUsedFolder(userID, folderName, leakedID, archiveNumber)
 }

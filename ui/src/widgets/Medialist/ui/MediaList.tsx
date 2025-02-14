@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { List, Card, Image, Button, message, Modal, Spin, Pagination, Space, Tooltip } from 'antd';
+import { List, Card, Image, Button, message, Modal, Spin, Space, Tooltip } from 'antd';
 import { CopyOutlined, DeleteOutlined, DownloadOutlined, EyeOutlined, FileOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AppSettings } from '@/shared';
 import s from './MediaList.module.scss';
@@ -15,14 +15,11 @@ interface MediaItem {
 
 export const MediaList: React.FC<MediaListProps> = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(30);
-  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchMedia = async (page: number, limit: number) => {
+  const fetchMedia = async () => {
     try {
-      const response = await fetch(`${AppSettings.API_URL}media?page=${page}&limit=${limit}`, {
+      const response = await fetch(`${AppSettings.API_URL}/media`, {
         credentials: 'include',
       });
 
@@ -30,9 +27,8 @@ export const MediaList: React.FC<MediaListProps> = () => {
         throw new Error('Failed to fetch media');
       }
 
-      const data: { data: MediaItem[]; total: number } = await response.json();
+      const data: { data: MediaItem[] } = await response.json();
       setMediaItems(data.data);
-      setTotalItems(data.total);
     } catch (error) {
       console.error('Error fetching media:', error);
       message.error('Не удалось загрузить медиафайлы.');
@@ -42,8 +38,8 @@ export const MediaList: React.FC<MediaListProps> = () => {
   };
 
   useEffect(() => {
-    fetchMedia(currentPage, pageSize);
-  }, [currentPage, pageSize]);
+    fetchMedia();
+  }, []);
 
   const confirmDelete = (index: number, filename: string) => {
     Modal.confirm({
@@ -74,7 +70,6 @@ export const MediaList: React.FC<MediaListProps> = () => {
       const newMediaItems = [...mediaItems];
       newMediaItems.splice(index, 1);
       setMediaItems(newMediaItems);
-      setTotalItems((prevTotal) => prevTotal - 1);
       message.success('Медиафайл успешно удален');
     } catch (error) {
       console.error('Error deleting media item:', error);
@@ -90,15 +85,6 @@ export const MediaList: React.FC<MediaListProps> = () => {
       console.error('Error copying media path:', error);
       message.error('Не удалось скопировать URL');
     }
-  };
-
-  const onPageChange = (page: number) => {
-    setCurrentPage(page);
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
   };
 
   return (
@@ -143,13 +129,6 @@ export const MediaList: React.FC<MediaListProps> = () => {
                 </Card>
               </List.Item>
             )}
-          />
-          <Pagination
-            className={s.pagination}
-            current={currentPage}
-            pageSize={pageSize}
-            total={totalItems}
-            onChange={onPageChange}
           />
         </>
       )}

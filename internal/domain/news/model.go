@@ -15,7 +15,7 @@ type News struct {
 	TimeCreatedAt string     `json:"time"`
 	User          user.User  `json:"user"`
 	Image         string     `json:"image"`
-	Description   string     `json:"description"`
+	Preview       string     `json:"preview"`
 	UserID        int        `json:"user_id"`
 	Json          string     `json:"json"`
 }

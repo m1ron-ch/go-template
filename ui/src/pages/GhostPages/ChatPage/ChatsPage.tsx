@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button } from 'antd'
+import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Space, Tag } from 'antd'
 import s from './ChatsPage.module.scss'
 import { AppSettings } from '@/shared'
+import { SendOutlined } from '@ant-design/icons'
 
 const { Sider } = Layout
 
@@ -17,6 +18,8 @@ interface Message {
   sender: 'me' | 'other'
   sender_name: string
   isRead: boolean
+  created_at: string
+
 }
 
 interface Chat {
@@ -24,10 +27,33 @@ interface Chat {
   name: string
   lastMessage: string
   messages: Message[]
+  lastMessageTime?: string
 }
 
 interface ChatsPageProps {
   leaked_id: number
+}
+function isToday(date: Date) {
+  const now = new Date()
+  return (
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear()
+  )
+}
+
+// Форматировать только время (HH:MM)
+// function formatTime(dateString: string) {
+//   const date = new Date(dateString)
+//   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+// }
+
+// Форматировать либо дату (MM/DD/YYYY) либо время (HH:MM) в зависимости от "сегодня/не сегодня"
+function formatDateOrTime(dateString: string) {
+  const date = new Date(dateString)
+  return isToday(date)
+    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : date.toLocaleDateString()
 }
 
 export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
@@ -39,6 +65,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
   const [editMessageId, setEditMessageId] = useState<number | null>(null)
   const [currUser, setCurrUser] = useState<User | null>(null)
   const [ws, setWs] = useState<WebSocket | null>(null)
+  const [chatStatus, setChatStatus] = useState<string>('')
 
   // ref для автопрокрутки
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -50,12 +77,22 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
     fetch(`${AppSettings.API_URL}/chats_user/${leaked_id}`, { method: 'GET', credentials: 'include' })
       .then(res => res.json())
       .then((data: any[]) => {
-        const updatedChats = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          lastMessage: item.last_message ? item.last_message : <i>Empty chat</i>,
-          messages: [] as Message[],
-        }))
+        const updatedChats = data.map(item => {
+          // Определяем показ времени или даты для левого списка
+          let lastMessageTime = ''
+          if (item.created_at) {
+            const dateStr = item.created_at
+            lastMessageTime = new Date(dateStr).toISOString().split('T')[0]
+          }
+
+          return {
+            id: item.id,
+            name: item.name,
+            lastMessage: item.last_message ? item.last_message : <i>Empty chat</i>,
+            lastMessageTime,
+            messages: [],
+          }
+        })
         setChats(updatedChats)
       })
       .catch(console.error)
@@ -84,6 +121,12 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
     }
   }, [activeChatId, activeChat?.messages])
 
+    useEffect(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, [activeChatId, activeChat?.messages])
+
   // При выборе чата — делаем fetch сообщений и открываем WS
   const handleSelectChat = async (id: number) => {
     setActiveChatId(id)
@@ -100,6 +143,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
     const newWs = new WebSocket(`ws://localhost:8080/ws/chat?chat_id=${id}&user_id=${currUser?.user_id}`)
 
     newWs.onopen = () => {
+      setChatStatus("Connected")
       console.log('WS connected to chat', id)
     }
     newWs.onmessage = (evt) => {
@@ -121,6 +165,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
       }
     }
     newWs.onclose = () => {
+      setChatStatus("Disconnected")
       console.log('WS disconnected from chat', id)
     }
 
@@ -140,6 +185,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
         sender: m.sender.role_id != 1 ? 'me' : 'other',
         sender_name: m.sender.role_id === 1 ? "campaign's representative/recovery company" : m.sender?.login ,
         isRead: true,
+        created_at: m.created_at
       }))
       setChats(prev =>
         prev.map(chat =>
@@ -149,6 +195,9 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
                 messages: mappedMessages,
                 lastMessage: mappedMessages.length > 0
                   ? mappedMessages[mappedMessages.length - 1].text
+                  : '',
+                lastMessageTime: mappedMessages.length > 0
+                  ? formatDateOrTime(mappedMessages[mappedMessages.length - 1].created_at)
                   : '',
               }
             : chat
@@ -175,6 +224,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
             sender: data.sender_id === currUser?.user_id ? 'me' : 'other',
             sender_name: data.role_id === 1 ? "campaign's representative/recovery company" : data.login,
             isRead: false,
+            created_at: new Date().toISOString()
           }],
           lastMessage: data.content,
         }
@@ -277,7 +327,10 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
                 style={{ marginLeft: '15px' }}
                 avatar={<Avatar>{chat.name[0]}</Avatar>}
                 title={chat.name}
-                description={chat.lastMessage}
+                description={<span>
+                  {chat.lastMessage}{' '}
+                  <small style={{ color: '#999' }}>{chat.lastMessageTime}</small>
+                </span>}
               />
             </List.Item>
           )}
@@ -287,7 +340,16 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
       <Layout className={s.rightSide}>
         {activeChat ? (
           <>
-            <div className={s.chatHeader}>{activeChat.name}</div>
+            <div className={s.chatHeader}>
+              <Space>
+                {activeChat.name} 
+                {chatStatus == "Connected" ? (
+                  <Tag color='green'>Connected</Tag>
+                ): (
+                  <Tag color='red'>Disconnected</Tag>
+                )}
+              </Space>
+            </div>
             <div className={s.messagesContainer}>
               {activeChat.messages.map((m) => {
                 const isMe = m.sender === 'me'
@@ -300,6 +362,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
                       <div className={s.messageText}>{m.text}</div>
                       {/* Пример отображения «прочитано/не прочитано» */}
                       <div className={s.checks}>
+                        {new Date(m.created_at).toISOString().split('T')[1].split('.')[0]}
                         {m.isRead && isMe && (
                           <span className={s.readMark}>
                             <span className={s.checkOne}>✓</span>
@@ -314,25 +377,21 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
               })}
               <div ref={messagesEndRef} />
             </div>
-            <div className={s.inputSection}>
-              <Input.TextArea
-                rows={2}
-                value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
-                onPressEnter={(e) => {
-                  e.preventDefault()
-                  handleSendMessage()
-                }}
-                placeholder="Type your message..."
-              />
-
-              <Button
-                type="primary"
-                style={{ marginLeft: 8, marginTop: 8 }}
-              >
-                Send
-              </Button>
-
+            <div className={s.inputSection} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ flex: 1 }}>
+                  <Input.TextArea
+                    rows={2}
+                    value={newMsg}
+                    onChange={(e) => setNewMsg(e.target.value)}
+                    onPressEnter={(e) => {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }}
+                    placeholder="Type your message..."
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <Button onClick={handleSendMessage} type="primary" icon={<SendOutlined />} />        
             </div>
           </>
         ) : (

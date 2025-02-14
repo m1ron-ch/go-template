@@ -12,7 +12,7 @@ interface User {
 }
 
 export const GhostHeader: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
   const [isAuth, setIsAuth] = useState(false)
 
@@ -52,11 +52,8 @@ export const GhostHeader: React.FC = () => {
     user?.role_id === 1
       ? { key: 'admin_panel', label: <Link to="/admin">Admin Panel</Link> }
       : null,
-    user?.role_id != 1
+    user?.role_id !== 1
       ? { key: 'Campaing', label: <Link to="/campaing">Campaing</Link> }
-      : null,
-    user?.role_id != 1
-      ? { key: 'chat', label: <Link to="/chat">Chat</Link> }
       : null,
     {
       key: 'logout',
@@ -71,31 +68,43 @@ export const GhostHeader: React.FC = () => {
   const userMenu = <Menu items={userMenuItems} />
 
   const menuItems = [
-    { key: 'news', label: <Link to="/news">News</Link> },
-    { key: 'leaked-data', label: <Link to="/leaked-data">Leaked Data</Link> },
-    { key: 'awaiting-publication', label: <Link to="/awaiting-publication">Awaiting Publication</Link> },
-    { key: 'terms-and-conditions', label: <Link to="/terms-and-conditions">Terms & Conditions</Link> },
-    { key: 'order-service', label: <Link to="/order-service">Order a service</Link> },
-    { key: 'contact', label: <Link to="/contact">Contact Us</Link> },
+    { key: 'news', label: <Link style={{ color: 'white' }} to="/news">News</Link> },
+    { key: 'leaked-data', label: <Link style={{ color: 'white' }} to="/leaked-data">Leaked Data</Link> },
+    { key: 'awaiting-publication', label: <Link style={{ color: 'white' }} to="/awaiting-publication">Awaiting Publication</Link> },
+    { key: 'terms-and-conditions', label: <Link style={{ color: 'white' }} to="/terms-and-conditions">Terms & Conditions</Link> },
+    { key: 'order-service', label: <Link style={{ color: 'white' }} to="/order-service">Order a service</Link> },
+    { key: 'contact', label: <Link style={{ color: 'white' }} to="/contact">Contact Us</Link> },
   ]
 
-  const pathParts = location.pathname.split('/');
-  const selectedKey = pathParts[1] || 'news';
+  const pathParts = location.pathname.split('/')
+  const selectedKey = pathParts[1] || 'news'
 
   return (
-    <AntHeader className={s.header}>
-      <Menu mode="horizontal" items={menuItems} className={s.menu} selectedKeys={[selectedKey]} />
+    <AntHeader
+      className={s.header}
+      style={{
+        color:"white !importan",
+        // Более насыщенный и акцентный зеленый градиент для header
+        background: 'linear-gradient(90deg, #43a047, #2e7d32)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        padding: '0 24px',
+      }}
+    >
+    <Menu
+      mode="horizontal"
+      items={menuItems}
+      className={s.menu}
+      selectedKeys={[selectedKey]}
+    />
       <div className={s.rightSide}>
         {isAuth ? (
           <Dropdown overlay={userMenu} trigger={['hover']}>
-            <Space style={{ cursor: 'pointer', fontWeight: 'bold' }}>
+            <Space style={{ cursor: 'pointer', fontWeight: 'bold', color: 'white' }}>
               {user?.login || 'User'}
               <DownOutlined />
             </Space>
           </Dropdown>
-        ) : (
-          <></>
-        )}
+        ) : null}
       </div>
     </AntHeader>
   )

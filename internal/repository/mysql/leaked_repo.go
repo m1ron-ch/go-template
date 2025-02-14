@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"main/internal/domain/leaked"
 	"main/internal/domain/user"
+	utility "main/internal/utils"
+	"sort"
 	"time"
 )
 
@@ -34,8 +36,11 @@ func (r *LeakedRepository) GetAll() ([]leaked.Leaked, error) {
             l.payout,
             l.payout_unit,
 						l.builder,
+						l.publish,
+						l.is_accept,
             u.uid,
             u.login,
+						u.role_id,
             ls.id AS screenshot_id,
             ls.screenshot_url,
             lu.id AS url_id,
@@ -74,12 +79,15 @@ func (r *LeakedRepository) GetAll() ([]leaked.Leaked, error) {
 			urlID         sql.NullInt64
 			url           sql.NullString
 			builder       int
+			publish       int
+			roleID        int
+			isAccept      int
 		)
 
 		if err := rows.Scan(
 			&id, &status, &blog, &createdAt, &companyName, &description,
-			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder,
-			&userUID, &userLogin, &screenshotID, &screenshotURL, &urlID, &url,
+			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder, &publish, &isAccept,
+			&userUID, &userLogin, &roleID, &screenshotID, &screenshotURL, &urlID, &url,
 		); err != nil {
 			return nil, fmt.Errorf("rows.Scan failed: %w", err)
 		}
@@ -98,9 +106,12 @@ func (r *LeakedRepository) GetAll() ([]leaked.Leaked, error) {
 				Payout:      payout,
 				PayoutUnit:  payoutUnit,
 				Builder:     builder,
+				Publish:     publish,
+				IsAccept:    isAccept,
 				User: user.User{
-					ID:    int64(userUID),
-					Login: userLogin,
+					ID:     int64(userUID),
+					Login:  userLogin,
+					RoleID: roleID,
 				},
 				Screenshots: make([]leaked.LeakedScreenshot, 0),
 				Links:       make([]leaked.LeakedUrls, 0),
@@ -156,6 +167,11 @@ func (r *LeakedRepository) GetAll() ([]leaked.Leaked, error) {
 	for _, l := range leakedMap {
 		result = append(result, *l)
 	}
+
+	// Сортировка по убыванию ID
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
 
 	return result, nil
 }
@@ -175,6 +191,7 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
             l.payout,
             l.payout_unit,
 						l.builder,
+						l.publish,
             u.uid,
             u.login,
             ls.id AS screenshot_id,
@@ -185,7 +202,7 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
         INNER JOIN users u ON u.uid = l.user_id
         LEFT JOIN leaked_screenshots ls ON ls.leaked_id = l.id
         LEFT JOIN leaked_urls lu ON lu.leaked_id = l.id
-				WHERE l.status = 1 AND l.publish = 1
+				WHERE l.status = 1 OR l.publish = 1
         ORDER BY l.id DESC;
     `
 	rows, err := r.db.Query(query)
@@ -216,11 +233,12 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
 			urlID         sql.NullInt64
 			url           sql.NullString
 			builder       int
+			publish       int
 		)
 
 		if err := rows.Scan(
 			&id, &status, &blog, &createdAt, &companyName, &description,
-			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder,
+			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder, &publish,
 			&userUID, &userLogin, &screenshotID, &screenshotURL, &urlID, &url,
 		); err != nil {
 			return nil, fmt.Errorf("rows.Scan failed: %w", err)
@@ -240,6 +258,7 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
 				Payout:      payout,
 				PayoutUnit:  payoutUnit,
 				Builder:     builder,
+				Publish:     publish,
 				User: user.User{
 					ID:    int64(userUID),
 					Login: userLogin,
@@ -299,10 +318,14 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
 		result = append(result, *l)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
+
 	return result, nil
 }
 
-func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
+func (r *LeakedRepository) GetAllUnActive(userID int) ([]leaked.Leaked, error) {
 	query := `
         SELECT
             l.id,
@@ -317,6 +340,7 @@ func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
             l.payout,
             l.payout_unit,
 						l.builder,
+						l.publish,
             u.uid,
             u.login,
             ls.id AS screenshot_id,
@@ -327,7 +351,7 @@ func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
         INNER JOIN users u ON u.uid = l.user_id
         LEFT JOIN leaked_screenshots ls ON ls.leaked_id = l.id
         LEFT JOIN leaked_urls lu ON lu.leaked_id = l.id
-				WHERE l.status = 0 AND l.publish = 1
+				WHERE l.status = 0 AND l.publish = 0 AND u.uid = l.user_id AND l.is_accept = 0
         ORDER BY l.id DESC;
     `
 	rows, err := r.db.Query(query)
@@ -358,11 +382,12 @@ func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
 			urlID         sql.NullInt64
 			url           sql.NullString
 			builder       int
+			publish       int
 		)
 
 		if err := rows.Scan(
 			&id, &status, &blog, &createdAt, &companyName, &description,
-			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder,
+			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder, &publish,
 			&userUID, &userLogin, &screenshotID, &screenshotURL, &urlID, &url,
 		); err != nil {
 			return nil, fmt.Errorf("rows.Scan failed: %w", err)
@@ -382,6 +407,7 @@ func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
 				Payout:      payout,
 				PayoutUnit:  payoutUnit,
 				Builder:     builder,
+				Publish:     publish,
 				User: user.User{
 					ID:    int64(userUID),
 					Login: userLogin,
@@ -440,6 +466,10 @@ func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
 	for _, l := range leakedMap {
 		result = append(result, *l)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
 
 	return result, nil
 }
@@ -459,6 +489,8 @@ func (r *LeakedRepository) GetAllCapmaingByUserID(userID int) ([]leaked.Leaked, 
             l.payout,
             l.payout_unit,
 						l.builder,
+						l.publish,
+						l.is_accept,
             u.uid,
             u.login,
             ls.id AS screenshot_id,
@@ -500,11 +532,13 @@ func (r *LeakedRepository) GetAllCapmaingByUserID(userID int) ([]leaked.Leaked, 
 			urlID         sql.NullInt64
 			url           sql.NullString
 			builder       int
+			publish       int
+			isAccept      int
 		)
 
 		if err := rows.Scan(
 			&id, &status, &blog, &createdAt, &companyName, &description,
-			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder,
+			&website, &expires, &logoUrl, &payout, &payoutUnit, &builder, &publish, &isAccept,
 			&userUID, &userLogin, &screenshotID, &screenshotURL, &urlID, &url,
 		); err != nil {
 			return nil, fmt.Errorf("rows.Scan failed: %w", err)
@@ -524,6 +558,8 @@ func (r *LeakedRepository) GetAllCapmaingByUserID(userID int) ([]leaked.Leaked, 
 				Payout:      payout,
 				PayoutUnit:  payoutUnit,
 				Builder:     builder,
+				Publish:     publish,
+				IsAccept:    isAccept,
 				User: user.User{
 					ID:    int64(userUID),
 					Login: userLogin,
@@ -583,6 +619,10 @@ func (r *LeakedRepository) GetAllCapmaingByUserID(userID int) ([]leaked.Leaked, 
 	for _, l := range leakedMap {
 		result = append(result, *l)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
 
 	return result, nil
 }
@@ -731,6 +771,17 @@ func (r *LeakedRepository) GetByID(leakedID int) (*leaked.Leaked, error) {
 	return leak, nil
 }
 
+func (r *LeakedRepository) GetCountNotAccepted() (int, error) {
+	var count int
+
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM leaked WHERE is_accept = 0`).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 // ----------------------------------------------------
 // Create
 // ----------------------------------------------------
@@ -747,13 +798,25 @@ func (r *LeakedRepository) Create(leak *leaked.Leaked) (int, error) {
 		}
 	}()
 
+	var mysqlExpires interface{}
+	if leak.ExpiresStr == "" {
+		// Если значение отсутствует – передаём nil, чтобы в БД сохранился NULL
+		mysqlExpires = nil
+	} else {
+		mysqlExpires, err = utility.FormatExpires(leak.ExpiresStr)
+		if err != nil {
+			tx.Rollback()
+			return 0, fmt.Errorf("failed to format expires: %w", err)
+		}
+	}
+
 	// Добавили поле builder
 	query := `
 			INSERT INTO leaked (
 					status, blog, company_name, description,
-					website, expires, logo_url, payout, payout_unit, user_id, builder
+					website, expires, logo_url, payout, payout_unit, user_id, builder, is_accept
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	result, err := tx.Exec(query,
 		leak.Status,
@@ -761,12 +824,13 @@ func (r *LeakedRepository) Create(leak *leaked.Leaked) (int, error) {
 		leak.CompanyName,
 		leak.Description,
 		leak.Website,
-		leak.Expires, // может быть nil
+		mysqlExpires, // может быть nil
 		leak.LogoUrl,
 		leak.Payout,
 		leak.PayoutUnit,
 		leak.User.ID, // user_id
 		leak.Builder, // <-- Новое поле
+		leak.IsAccept,
 	)
 	if err != nil {
 		tx.Rollback()
@@ -828,6 +892,18 @@ func (r *LeakedRepository) Update(leak *leaked.Leaked) error {
 		}
 	}()
 
+	var mysqlExpires interface{}
+	if leak.ExpiresStr == "" {
+		// Если значение отсутствует – передаём nil, чтобы в БД сохранился NULL
+		mysqlExpires = nil
+	} else {
+		mysqlExpires, err = utility.FormatExpires(leak.ExpiresStr)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to format expires: %w", err)
+		}
+	}
+
 	// Добавили поле builder
 	query := `
 			UPDATE leaked
@@ -842,7 +918,8 @@ func (r *LeakedRepository) Update(leak *leaked.Leaked) error {
 					payout = ?,
 					payout_unit = ?,
 					builder = ?,
-					publish = ?
+					publish = ?,
+					is_accept = ?
 			WHERE id = ?
 	`
 	_, err = tx.Exec(query,
@@ -851,12 +928,13 @@ func (r *LeakedRepository) Update(leak *leaked.Leaked) error {
 		leak.CompanyName,
 		leak.Description,
 		leak.Website,
-		leak.Expires, // nil, если не задано
+		mysqlExpires, // nil, если не задано
 		leak.LogoUrl,
 		leak.Payout,
 		leak.PayoutUnit,
 		leak.Builder, // <-- Новое поле
 		leak.Publish,
+		leak.IsAccept,
 		leak.ID,
 	)
 	if err != nil {
@@ -936,4 +1014,16 @@ func (r *LeakedRepository) Delete(leakedID int) error {
 	}
 
 	return nil
+}
+
+func (r *LeakedRepository) Accepted(leakedID int) error {
+	_, err := r.db.Exec("UPDATE leaked SET is_accept = 1, publish = 1, status = 1 WHERE id = ?",
+		leakedID)
+	return err
+}
+
+func (r *LeakedRepository) Reject(leakedID int) error {
+	_, err := r.db.Exec("UPDATE leaked SET is_accept = -1, publish = 0 WHERE id = ?",
+		leakedID)
+	return err
 }

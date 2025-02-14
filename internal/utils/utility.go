@@ -25,6 +25,16 @@ import (
 	"github.com/trycourier/courier-go/v2"
 )
 
+func FormatExpires(expiresStr string) (string, error) {
+	// Парсим дату в формате RFC3339
+	t, err := time.Parse(time.RFC3339, expiresStr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse expires: %w", err)
+	}
+	// Форматируем в строку для MySQL
+	return t.Format("2006-01-02 15:04:05"), nil
+}
+
 func CalculateFileHash(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {

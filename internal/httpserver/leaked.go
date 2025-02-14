@@ -32,6 +32,29 @@ func (h *Handler) GetAllLeakeds(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+func (h *Handler) GetCountNotAccepted(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodGet)
+
+	notAcceptedCount, err := h.leakedService.GetCountNotAccepted()
+	if err != nil {
+		http.Error(w, "Error fetching leaked data: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := struct {
+		Count int `json:"count"`
+	}{
+		Count: notAcceptedCount,
+	}
+
+	// Кодируем JSON-ответ
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+	}
+}
+
 func (h *Handler) GetAllCampaing(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodGet)
 
@@ -145,7 +168,35 @@ func (h *Handler) GetAllActiveLeakeds(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetAllUnACtiveLeakeds(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodGet)
 
-	leakedList, err := h.leakedService.GetAllUnActive()
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		http.Error(w, "No token cookie", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := cookie.Value
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(h.config.JWTSecret), nil
+	})
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid claims", http.StatusUnauthorized)
+		return
+	}
+
+	userFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		http.Error(w, "Invalid user_id in token", http.StatusUnauthorized)
+		return
+	}
+	userID := int(userFloat)
+
+	leakedList, err := h.leakedService.GetAllUnActive(userID)
 	if err != nil {
 		http.Error(w, "Error fetching leaked data: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -189,6 +240,74 @@ func (h *Handler) GetLeakedsByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+}
+
+func (h *Handler) LeakedAccepted(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodPut)
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid leaked ID", http.StatusBadRequest)
+		return
+	}
+
+	type Leaked struct {
+		LeakedID int `json:"leaked_id"`
+	}
+
+	var currLeaked Leaked
+	if err := json.NewDecoder(r.Body).Decode(&currLeaked); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if currLeaked.LeakedID != id {
+		http.Error(w, "Error leaked_id != path_id", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.leakedService.Accepted(currLeaked.LeakedID); err != nil {
+		http.Error(w, "Error accept leaked: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) LeakedReject(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodPut)
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid leaked ID", http.StatusBadRequest)
+		return
+	}
+
+	type Leaked struct {
+		LeakedID int `json:"leaked_id"`
+	}
+
+	var currLeaked Leaked
+	if err := json.NewDecoder(r.Body).Decode(&currLeaked); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if currLeaked.LeakedID != id {
+		http.Error(w, "Error leaked_id != path_id: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.leakedService.Reject(currLeaked.LeakedID); err != nil {
+		http.Error(w, "Error accept leaked: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Handler) CreateLeaked(w http.ResponseWriter, r *http.Request) {

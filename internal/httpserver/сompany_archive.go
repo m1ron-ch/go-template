@@ -20,6 +20,25 @@ type CompanyRequest struct {
 	CompanyName string `json:"company_name"`
 }
 
+func (h *Handler) GetAllFiles(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodGet)
+
+	files, err := h.foldersService.GetAll()
+	if err != nil {
+		http.Error(w, "Error fetching news "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonData, err := json.Marshal(files)
+	if err != nil {
+		http.Error(w, "Error marshaling news", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
 // Пример handler:
 func (h *Handler) GenerateCompanyArchive(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodPost)
@@ -62,48 +81,56 @@ func (h *Handler) GenerateCompanyArchive(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 1) Найти первую "свободную" папку через сервис
-	freeFolder, err := h.foldersService.GetFreeFolder()
+	// 1) Узнаём следующий свободный архив
+	folderName, nextNumber, err := h.foldersService.GetFreeFolder()
 	if err != nil {
-		http.Error(w, "No free folders: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "Error getting next archive: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 2) Сохраняем в БД ТОЛЬКО название (например, req.CompanyName),
-	//    без переименования реальной папки на диске
-	lastID, err := h.foldersService.MarkFolderAsUsed(req.UserID, req.CompanyName)
+	// 2) Сохраняем, что этот архив (archive_XXX) занял такой-то юзер
+	lastID, err := h.foldersService.MarkFolderAsUsed(req.UserID, folderName, req.LeakerID, nextNumber)
 	if err != nil {
 		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Обновляем leak в базе
+	// 3) Обновляем leak (ваша логика)
 	currLeaked, err := h.leakedService.GetByID(req.LeakerID)
 	if err != nil {
 		http.Error(w, "Error get leaked by id: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	currLeaked.Builder = lastID
 	if err := h.leakedService.Update(currLeaked); err != nil {
 		http.Error(w, "Error update leaked: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 3) Создаём ZIP-архив из freeFolder (без переименования)
-	zipFilePath, err := createZipFromFolder(freeFolder)
+	// 4) Теперь формируем ссылку на внешний сервер
+	//    Допустим, "archive_101.zip" физически лежит по URL: https://ip:port/archive_101.zip
+	remoteArchiveURL := fmt.Sprintf("%s/%s.zip", h.config.URL1, folderName)
+
+	// Делаем запрос к тому серверу
+	resp, err := http.Get(remoteArchiveURL)
 	if err != nil {
-		http.Error(w, "Error creating zip: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error requesting remote archive: "+err.Error(), http.StatusBadGateway)
 		return
 	}
-	// При необходимости временный файл можно удалить после отправки
-	defer os.Remove(zipFilePath)
+	defer resp.Body.Close()
 
-	// 4) Возвращаем архив
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "Remote server returned status "+resp.Status, http.StatusBadGateway)
+		return
+	}
+
+	// 5) Проксируем клиенту
 	w.Header().Set("Content-Type", "application/zip")
-	// В заголовке Content-Disposition название берём из req.CompanyName
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.zip"`, req.CompanyName))
-	http.ServeFile(w, r, zipFilePath)
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		// Ошибка при копировании (зачастую уже часть ответа ушла)
+		fmt.Println("Error copying archive to client:", err)
+	}
 }
 
 // createZipFromFolder - вспомогательная функция для архивирования

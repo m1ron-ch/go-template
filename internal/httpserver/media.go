@@ -58,7 +58,7 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 			Filename:   filename,
 			UploadDate: fileInfo.ModTime(),
 			Url:        fmt.Sprintf("/static/media/%s", filename),
-			FullUrl:    fmt.Sprintf("h/static/media/%s", filename),
+			FullUrl:    fmt.Sprintf("/static/media/%s", filename),
 			Type:       fileType,
 		})
 	}

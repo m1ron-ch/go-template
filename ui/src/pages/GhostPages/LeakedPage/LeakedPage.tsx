@@ -145,7 +145,7 @@ const LeakedPage: React.FC = () => {
                   style={{
                     height: 220,
                     objectFit: "contain",
-                    background: "white",
+                    background: 'linear-gradient(135deg,rgb(193, 223, 159), #a5d6a7)'
                   }}
                 />
               ) : null
