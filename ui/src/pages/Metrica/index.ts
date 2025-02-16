@@ -1,1 +1,0 @@
-export { MetricaPage } from './MetricaPage'

@@ -1,1 +1,0 @@
-export { GhostHeader } from './GhostHeader'

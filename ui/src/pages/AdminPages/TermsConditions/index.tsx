@@ -1,2 +1,0 @@
-export { TermsConditions } from './TermsConditions'
-

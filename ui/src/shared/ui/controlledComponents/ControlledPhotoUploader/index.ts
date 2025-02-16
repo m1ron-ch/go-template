@@ -1,1 +1,0 @@
-export { ControlledPhotoUploader } from './ControlledPhotoUploader'

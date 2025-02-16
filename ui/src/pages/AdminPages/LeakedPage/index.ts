@@ -1,1 +1,0 @@
-export { LeakedPageTabs } from './LeakedPage'

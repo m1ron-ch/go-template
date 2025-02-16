@@ -1,2 +1,0 @@
-export { OrderService } from './OrderService'
-

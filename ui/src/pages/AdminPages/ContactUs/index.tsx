@@ -1,2 +1,0 @@
-export { ContactUs } from './ContactUs'
-
