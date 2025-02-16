@@ -22,9 +22,28 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodGet)
 
 	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
-	mediaPath := "static/media/*"
-	path := filepath.Join(basePath, mediaPath)
+	basePath := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(b))))
+	// mediaPath := filepath.Join("mnt", "web", "static", "media", "*")
+	// path := mediaPath
+	path := "/mnt/web/static/media/*"
+
+	fmt.Println("Base path is:", basePath)
+	fmt.Println("Glob pattern is:", path)
+
+	fmt.Println("Проверка доступа к /mnt/web/static/media")
+	_, err := os.Stat("/mnt/web/static/media")
+	if err != nil {
+		fmt.Println("Ошибка доступа к /mnt/web/static/media:", err.Error())
+	}
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		fmt.Println("Ошибка чтения директории:", err.Error())
+	} else {
+		for _, entry := range entries {
+			fmt.Println("Найден файл:", entry.Name())
+		}
+	}
 
 	files, err := filepath.Glob(path)
 	if err != nil {
@@ -39,6 +58,7 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 
 		fileInfo, err := os.Stat(file)
 		if err != nil {
+			fmt.Println(err.Error())
 			http.Error(w, "Ошибка получения данных файла", http.StatusInternalServerError)
 			return
 		}
@@ -104,9 +124,12 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	fmt.Println(response)
+
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
+		fmt.Println(err.Error())
 		http.Error(w, "Ошибка создания JSON", http.StatusInternalServerError)
 	}
 }
@@ -137,8 +160,8 @@ func (h *Handler) UploadMediaHandle(w http.ResponseWriter, r *http.Request) {
 
 	// Determine the base path and ensure the target directory exists
 	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
-	mediaPath := filepath.Join(basePath, "static/media")
+	basePath := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(b))))
+	mediaPath := filepath.Join(basePath, "mnt/web/static/media")
 	if err := os.MkdirAll(mediaPath, os.ModePerm); err != nil {
 		http.Error(w, fmt.Sprintf("error creating directory: %v", err), http.StatusInternalServerError)
 		return

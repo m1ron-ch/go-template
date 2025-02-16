@@ -36,8 +36,8 @@ type DBConfig struct {
 
 func MustLoad(fileConfig string) (*Config, error) {
 	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
-	configPath := filepath.Join(basePath, "configs", fileConfig+".yaml")
+	basePath := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(b))))
+	configPath := filepath.Join(basePath, "mnt", "web", "configs", fileConfig+".yaml")
 
 	cfg := NewConfig()
 

@@ -48,7 +48,7 @@ func NewHandler(userSrv user.Service, newsSrv news.Service, chatSrv chat.Service
 }
 
 func (h *Handler) SetCORSHeaders(w http.ResponseWriter, method string) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", string(method))
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -58,8 +58,8 @@ func (h *Handler) InitRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(filepath.Dir(b)))
-	path := filepath.Join(basePath, "static")
+	basePath := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(b))))
+	path := filepath.Join(basePath, "mnt", "web", "static")
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(path))))
 
 	api := router.PathPrefix("/api").Subrouter()
@@ -133,12 +133,11 @@ func (h *Handler) InitRoutes() *mux.Router {
 
 	router.HandleFunc("/ws/chat", h.chatWebSocket).Methods(http.MethodGet)
 
-	uiPath := filepath.Join(basePath, "ui")
+	uiPath := filepath.Join(basePath, "src", "ui")
 	assetsPath := filepath.Join(uiPath, "dist", "assets")
 
 	assetsDir := http.Dir(assetsPath)
-	router.PathPrefix("/assets/").
-		Handler(http.StripPrefix("/assets/", http.FileServer(assetsDir)))
+	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(assetsDir)))
 
 	// router.Handle("/metrics", promhttp.Handler())
 

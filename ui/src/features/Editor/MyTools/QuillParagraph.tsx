@@ -118,7 +118,15 @@ const TinyMCEComponent: React.FC<TinyMCEComponentProps> = ({ data, onChange }) =
             'searchreplace', 'wordcount', 'visualblocks', 'visualchars', 'code', 'fullscreen', 'insertdatetime',
             'media', 'table', 'emoticons', 'help', 'autoresize',
           ],
-          toolbar: 'undo redo | bold italic | image | link | ...',
+          toolbar:
+          'undo redo | bold italic underline strikethrough | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist checklist | forecolor backcolor casechange permanentpen formatpainter removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media pageembed template link anchor codesample | ltr rtl | showcomments addcomment',
+          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+          quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+          quickbars_insert_toolbar: false,
+          image_advtab: true,
+          importcss_append: true,
+          autoresize_bottom_margin: 20,
+          autoresize_min_height: 500,
 
           // 1) Main logic: when clicking "add image"
           //    we open our custom modal instead of the standard file picker.
