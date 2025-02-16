@@ -1,0 +1,37 @@
+.root {
+  display: flex;
+  flex-direction: column;
+
+  .link {
+    align-self: flex-end;
+  }
+
+  .emptyField {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    padding-top: 200px;
+  }
+}
+
+.actionIcons {
+  display: flex;
+  align-items: center;
+}
+
+.actionIcons > button {
+  padding: 7px;
+  border-radius: 5px;
+}
+
+// .container { 
+//   margin: 0 auto;
+//   padding: 20px;
+// }
+
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}

@@ -1,0 +1,1 @@
+export { ControlledPhotoUploader } from './ControlledPhotoUploader'

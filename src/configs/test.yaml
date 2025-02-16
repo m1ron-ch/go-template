@@ -1,0 +1,8 @@
+server:
+  address: "127.0.0.1"
+  port: "8085"
+  timeout: 45s
+
+database:
+  user: "admin"
+  password: "securepassword"

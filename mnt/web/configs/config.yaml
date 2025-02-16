@@ -1,0 +1,19 @@
+env: "local" #prod
+
+jwt_secret: "JWTSecretT0Ken$!#@*(!$)!"
+
+url_1: "https://ip:port" #шифрованные файлы
+url_2: "https://ip:port" #дешифратор
+
+
+server:
+  address: "0.0.0.0"
+  port: "8080"
+  timeout: 45s
+
+database:
+  db_name: "blog"
+  hostname: "mysql"
+  port: "3306"
+  username: "root"
+  password: "ahXu8eafish1bee2Eedo"

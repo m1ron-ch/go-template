@@ -1,0 +1,64 @@
+.root {
+  display: flex;
+  flex-direction: column;
+
+  .link {
+    align-self: flex-end;
+  }
+
+  .emptyField {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    padding-top: 200px;
+  }
+
+  .actionIcons {
+    display: flex;
+    align-items: center;
+  }
+
+  .actionIcons > button {
+    padding: 7px;
+    border-radius: 5px;
+  }
+
+  .editorToolbar {
+    margin-bottom: 20px;
+  }
+
+
+  // .pagination {
+  //   text-align: center;
+  //   margin-top: 20px;
+  // }
+
+  // .pagination button {
+  //   padding: 8px 12px;
+  //   margin-right: 5px;
+  //   border: none;
+  //   background-color: #007bff;
+  //   color: white;
+  //   cursor: pointer;
+  //   transition: background-color 0.3s ease;
+  // }
+
+  // .pagination button:hover {
+  //   background-color: #0056b3;
+  // }
+
+  // .pagination button:disabled {
+  //   background-color: #ccc;
+  //   cursor: not-allowed;
+  // }
+}
+
+.editorWrapper {
+  padding: 20px 0 20px 0;
+  border-radius: 8px;
+}
+// .container {
+//   // max-width: 1200px;
+//   margin: 0 auto;
+//   padding: 20px;
+// }

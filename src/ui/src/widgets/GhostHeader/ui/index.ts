@@ -1,0 +1,1 @@
+export { GhostHeader } from './GhostHeader'
