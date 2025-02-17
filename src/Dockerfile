@@ -12,6 +12,7 @@ COPY configs/ /app/configs/
 
 # Используем `vendor` для загрузки зависимостей
 ENV GOFLAGS="-mod=vendor"
+ENV TZ=Etc/UTC
 
 # Собираем Go-приложение
 RUN go build -o /goapp ./cmd/go

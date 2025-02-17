@@ -10,7 +10,7 @@ import {
   Space,
   Tooltip,
   Upload,
-  Empty, // <-- Импортируем Empty
+  Empty, // <-- Import Empty
 } from 'antd';
 import {
   CopyOutlined,
@@ -51,7 +51,7 @@ export const MediaLibrary: React.FC = () => {
       setMediaItems(data.data || []);
     } catch (error) {
       console.error('Error fetching media:', error);
-      message.error('Не удалось загрузить медиафайлы.');
+      message.error('Failed to load media files.');
     } finally {
       setIsLoading(false);
     }
@@ -63,11 +63,11 @@ export const MediaLibrary: React.FC = () => {
 
   const confirmDelete = (index: number, filename: string) => {
     Modal.confirm({
-      title: 'Вы уверены, что хотите удалить этот медиафайл?',
-      content: 'Это действие невозможно будет отменить.',
-      okText: 'Да, удалить',
+      title: 'Are you sure you want to delete this media file?',
+      content: 'This action cannot be undone.',
+      okText: 'Yes, delete',
       okType: 'danger',
-      cancelText: 'Нет',
+      cancelText: 'No',
       onOk: () => onRemoveMediaItem(index, filename),
     });
   };
@@ -90,20 +90,20 @@ export const MediaLibrary: React.FC = () => {
       const newMediaItems = [...mediaItems];
       newMediaItems.splice(index, 1);
       setMediaItems(newMediaItems);
-      message.success('Медиафайл успешно удален');
+      message.success('Media file successfully deleted.');
     } catch (error) {
       console.error('Error deleting media item:', error);
-      message.error('Не удалось удалить медиафайл.');
+      message.error('Failed to delete media file.');
     }
   };
 
   const onCopyMediaPath = async (mediaURL: string) => {
     try {
       await navigator.clipboard.writeText(mediaURL);
-      message.success('URL скопирован в буфер обмена');
+      message.success('URL copied to clipboard.');
     } catch (error) {
       console.error('Error copying media path:', error);
-      message.error('Не удалось скопировать URL');
+      message.error('Failed to copy URL.');
     }
   };
 
@@ -114,7 +114,7 @@ export const MediaLibrary: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${AppSettings.API_URL}media/upload`, {
+      const response = await fetch(`${AppSettings.API_URL}/upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -141,9 +141,9 @@ export const MediaLibrary: React.FC = () => {
     onChange(info: any) {
       const { status } = info.file;
       if (status === 'done') {
-        message.success(`${info.file.name} файл успешно загружен.`);
+        message.success(`${info.file.name} file uploaded successfully.`);
       } else if (status === 'error') {
-        message.error(`${info.file.name} не удалось загрузить файл.`);
+        message.error(`Failed to upload ${info.file.name}.`);
       }
     },
   };
@@ -157,14 +157,14 @@ export const MediaLibrary: React.FC = () => {
         <p className="ant-upload-drag-icon">
           <UploadOutlined />
         </p>
-        <p className="ant-upload-text">Перетащите файлы сюда или нажмите, чтобы выбрать</p>
-        <p className="ant-upload-hint">Можно загрузить несколько файлов одновременно.</p>
+        <p className="ant-upload-text">Drag files here or click to select</p>
+        <p className="ant-upload-hint">You can upload multiple files at once.</p>
       </Upload.Dragger>
 
       {isLoading ? (
         <Spin indicator={<LoadingOutlined spin />} size="large" className={s.spinner} />
       ) : mediaItems.length === 0 ? (
-        <Empty description="Нет загруженных медиафайлов" />
+        <Empty description="No uploaded media files" />
       ) : (
         <>
           <List
@@ -191,16 +191,16 @@ export const MediaLibrary: React.FC = () => {
                   <div className={s.cardActions}>
                     <Space>
                       <Space direction="vertical">
-                        <Tooltip title="Копировать ссылку" placement="right">
+                        <Tooltip title="Copy link" placement="right">
                           <Button icon={<CopyOutlined />} onClick={() => onCopyMediaPath(item.url)} />
                         </Tooltip>
-                        <Tooltip title="Просмотр" placement="right">
+                        <Tooltip title="View" placement="right">
                           <Button
                             icon={item.type === 'image' ? <EyeOutlined /> : <DownloadOutlined />}
                             onClick={() => window.open(item.url, '_blank')}
                           />
                         </Tooltip>
-                        <Tooltip title="Удалить" placement="right">
+                        <Tooltip title="Delete" placement="right">
                           <Button
                             danger
                             icon={<DeleteOutlined />}

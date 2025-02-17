@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Popconfirm, Tag, Space } from 'antd'
+import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Popconfirm, Tag, Space, Badge } from 'antd'
 import s from './ChatsPage.module.scss'
 import { AppSettings } from '@/shared'
 import { SendOutlined } from '@ant-design/icons'
@@ -62,6 +62,7 @@ interface Chat {
   name: string
   lastMessage: string
   messages: Message[]
+  count_un_read: number
   lastMessageTime?: string
 }
 
@@ -100,6 +101,7 @@ export const ChatsPage: React.FC = () => {
             lastMessage: item.last_message ? item.last_message : <i>Empty chat</i>,
             lastMessageTime,
             messages: [],
+            count_un_read: item.count_un_read,
           }
         })
         setChats(updatedChats)
@@ -143,7 +145,7 @@ export const ChatsPage: React.FC = () => {
     // Открываем новый WebSocket для выбранного чата
     console.log(`id: ${id}`);
     console.log(`curr user: ${currUser?.user_id}`);
-    const newWs = new WebSocket(`ws://localhost:8080/ws/chat?chat_id=${id}&user_id=${currUser?.user_id}`)
+    const newWs = new WebSocket(`ws://${AppSettings.WEBSOCKET_URL}/ws/chat?chat_id=${id}&user_id=${currUser?.user_id}`)
 
     newWs.onopen = () => {
       setChatStatus("Connected")
@@ -182,12 +184,13 @@ export const ChatsPage: React.FC = () => {
       })
       const data = await res.json()
       // Преобразуем в структуру Message
+      console.log(data);
       const mappedMessages: Message[] = data.map((m: any) => ({
         id: m.id,
         text: m.content,
         sender: m.sender.role_id === 1 ? 'me' : 'other',
         sender_name: m.sender.role_id === 1 ? "campaign's representative/recovery company" : m.sender?.login ,
-        isRead: true,
+        isRead: m.is_read,
         created_at: m.created_at
       }))
       setChats(prev =>
@@ -238,15 +241,19 @@ export const ChatsPage: React.FC = () => {
   const handleWsEditMessage = (data: any) => {
     setChats(prevChats =>
       prevChats.map(chat => {
-        if (chat.id !== activeChatId) return chat
-
-        const updated = chat.messages.map(m =>
+        if (chat.id !== data.chat_id) return chat
+  
+        const updatedMessages = chat.messages.map(m =>
           m.id === data.message_id
             ? { ...m, text: data.content }
             : m
         )
-        const lastMsg = updated.length > 0 ? updated[updated.length - 1].text : ''
-        return { ...chat, messages: updated, lastMessage: lastMsg }
+        const lastMsg = updatedMessages.length > 0 ? updatedMessages[updatedMessages.length - 1].text : ''
+        return {
+          ...chat,
+          messages: updatedMessages,
+          lastMessage: lastMsg,
+        }
       })
     )
   }
@@ -254,11 +261,15 @@ export const ChatsPage: React.FC = () => {
   const handleWsDeleteMessage = (data: any) => {
     setChats(prevChats =>
       prevChats.map(chat => {
-        if (chat.id !== activeChatId) return chat
-
+        if (chat.id !== data.chat_id) return chat
+  
         const filtered = chat.messages.filter(m => m.id !== data.message_id)
         const lastMsg = filtered.length > 0 ? filtered[filtered.length - 1].text : ''
-        return { ...chat, messages: filtered, lastMessage: lastMsg }
+        return {
+          ...chat,
+          messages: filtered,
+          lastMessage: lastMsg,
+        }
       })
     )
   }
@@ -302,7 +313,39 @@ export const ChatsPage: React.FC = () => {
     }))
   }
 
-  // Меню «правый клик» для сообщений (Edit / Delete)
+  const handleDeleteChat = async (chatId: number) => {
+    if (!chatId) return
+    try {
+      await fetch(`${AppSettings.API_URL}/chats/${chatId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      // Удаляем из стейта
+      setChats((prev) => prev.filter((c) => c.id !== chatId))
+      if (activeChatId === chatId) {
+        setActiveChatId(null)
+      }
+    } catch (error) {
+      console.error('Failed to delete chat:', error)
+    }
+  }
+
+  const chatMenuItems = (chatId: number): MenuProps['items'] => [
+    {
+      key: 'deleteChat',
+      label: (
+        <Popconfirm
+          title=""
+          onConfirm={() => handleDeleteChat(chatId)}
+          okText="Yes"
+          cancelText="No"
+        >
+          <span>Delete Chat</span>
+        </Popconfirm>
+      ),
+    },
+  ]
+
   const getMenuItems = (msgId: number, msgText: string): MenuProps['items'] => [
     {
       key: 'edit',
@@ -322,20 +365,46 @@ export const ChatsPage: React.FC = () => {
         <List
           dataSource={chats}
           renderItem={(chat) => (
-            <List.Item
-              className={chat.id === activeChatId ? s.activeChat : ''}
-              onClick={() => handleSelectChat(chat.id)}
-            >
-              <List.Item.Meta
-                style={{ marginLeft: '15px' }}
-                avatar={<Avatar>{chat.name[0]}</Avatar>}
-                title={chat.name}
-                description={<span>
-                  {chat.lastMessage}{' '}
-                  <small style={{ color: '#999' }}>{chat.lastMessageTime}</small>
-                </span>}
-              />
-            </List.Item>
+            <Dropdown menu={{ items: chatMenuItems(chat.id) }} trigger={['contextMenu']}>
+              <List.Item
+                onClick={() => handleSelectChat(chat.id)}
+                style={{ cursor: 'pointer', padding: '8px 16px' }}
+              >
+                <div style={{ width: '100%' }}>
+                  {/* Первая строка: аватар + имя чата (слева), дата (справа) */}
+                  <div 
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: 4
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar style={{ marginRight: 8 }}>{chat.name?.[0]}</Avatar>
+                      <strong>{chat.name}</strong>
+                    </div>
+                    <span style={{ color: '#999' }}>{chat.lastMessageTime}</span>
+                  </div>
+
+                  {/* Вторая строка: последнее сообщение (слева), счётчик непрочитанных (справа) */}
+                  <div 
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{ color: '#555' }}>{chat.lastMessage}</span>
+                    {chat.count_un_read > 0 && (
+                      <Badge
+                        count={chat.count_un_read}
+                        style={{ backgroundColor: '#52c41a' }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </List.Item>
+            </Dropdown>
           )}
         />
       </Sider>

@@ -32,7 +32,7 @@ func FormatExpires(expiresStr string) (string, error) {
 		return "", fmt.Errorf("failed to parse expires: %w", err)
 	}
 	// Форматируем в строку для MySQL
-	return t.Format("2006-01-02 15:04:05"), nil
+	return t.UTC().Format("2006-01-02 15:04:05"), nil
 }
 
 func CalculateFileHash(filePath string) (string, error) {

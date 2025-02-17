@@ -63,7 +63,7 @@ func (r *UserRepository) GetByLogin(login string) (*user.User, error) {
 
 func (r *UserRepository) Authenticate(login, password string) (*user.User, error) {
 	row := r.db.QueryRow(`
-			SELECT uid, name, login, role_id, password_hash 
+			SELECT uid, name, login, role_id, password_hash, status_id
 			FROM users 
 			WHERE login = ?
 			LIMIT 1
@@ -71,7 +71,7 @@ func (r *UserRepository) Authenticate(login, password string) (*user.User, error
 
 	var u user.User
 	var hashedPassword string
-	err := row.Scan(&u.ID, &u.Name, &u.Login, &u.RoleID, &hashedPassword)
+	err := row.Scan(&u.ID, &u.Name, &u.Login, &u.RoleID, &hashedPassword, &u.StatusID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

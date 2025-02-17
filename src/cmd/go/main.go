@@ -13,7 +13,12 @@ import (
 	"main/internal/gorutine"
 	"main/internal/httpserver/manager"
 	"main/internal/repository/mysql"
+	"time"
 )
+
+func init() {
+	time.Local = time.UTC
+}
 
 func main() {
 	cm := manager.NewChatManager()

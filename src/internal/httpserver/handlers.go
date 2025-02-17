@@ -187,6 +187,7 @@ func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.chatService.UpdateUnReadMsg(int(chatID), int(userID))
 	fmt.Println(fmt.Sprintf("chat id %d", chatID))
 	fmt.Println(fmt.Sprintf("user id %d", userID))
 

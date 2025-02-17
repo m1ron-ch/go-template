@@ -29,6 +29,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.StatusID > 1 {
+		http.Error(w, "Unauthorized. User account Blocked", http.StatusUnauthorized)
+		return
+	}
+
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
 		"login":   user.Login,

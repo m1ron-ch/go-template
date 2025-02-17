@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -36,31 +35,31 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Ошибка доступа к /mnt/web/static/media:", err.Error())
 	}
 
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		fmt.Println("Ошибка чтения директории:", err.Error())
-	} else {
-		for _, entry := range entries {
-			fmt.Println("Найден файл:", entry.Name())
-		}
-	}
+	// entries, err := os.ReadDir(path)
+	// if err != nil {
+	// 	fmt.Println("Ошибка чтения директории:", err.Error())
+	// } else {
+	// 	for _, entry := range entries {
+	// 		fmt.Println("Найден файл:", entry.Name())
+	// 	}
+	// }
 
-	files, err := filepath.Glob(path)
+	files, err := os.ReadDir("/mnt/web/static/media")
 	if err != nil {
-		fmt.Println(err.Error())
-		http.Error(w, "Ошибка чтения файлов по пути: "+path, http.StatusInternalServerError)
+		// ...
+		http.Error(w, "Ошибка доступа к директории /mnt/web/static/media", http.StatusInternalServerError)
 		return
 	}
 
 	var mediaData []media.Media
-	for _, file := range files {
-		filename := filepath.Base(file)
 
-		fileInfo, err := os.Stat(file)
+	for _, file := range files {
+		filename := file.Name()
+		fileInfo, err := os.Stat(filepath.Join("/mnt/web/static/media", filename))
 		if err != nil {
-			fmt.Println(err.Error())
-			http.Error(w, "Ошибка получения данных файла", http.StatusInternalServerError)
-			return
+			fmt.Println("Ошибка получения данных файла:", err)
+			// но тут вы не делаете `return http.Error(...)`, просто пропускаете файл
+			continue
 		}
 
 		var fileType string
@@ -87,41 +86,9 @@ func (h *Handler) DisplayMedia(w http.ResponseWriter, r *http.Request) {
 		return mediaData[i].UploadDate.After(mediaData[j].UploadDate)
 	})
 
-	pageStr := r.URL.Query().Get("page")
-	limitStr := r.URL.Query().Get("limit")
-
-	var response map[string]interface{}
-
-	if pageStr == "" && limitStr == "" {
-		response = map[string]interface{}{
-			"total": len(mediaData),
-			"data":  mediaData,
-		}
-	} else {
-		page, errPage := strconv.Atoi(pageStr)
-		if errPage != nil || page <= 0 {
-			page = 1
-		}
-		limit, errLimit := strconv.Atoi(limitStr)
-		if errLimit != nil || limit <= 0 {
-			limit = 10
-		}
-
-		start := (page - 1) * limit
-		end := start + limit
-		if start > len(mediaData) {
-			start = len(mediaData)
-		}
-		if end > len(mediaData) {
-			end = len(mediaData)
-		}
-
-		response = map[string]interface{}{
-			"total": len(mediaData),
-			"page":  page,
-			"limit": limit,
-			"data":  mediaData[start:end],
-		}
+	// var response map[string]interface{}
+	response := map[string]interface{}{
+		"data": mediaData,
 	}
 
 	fmt.Println(response)
@@ -159,15 +126,16 @@ func (h *Handler) UploadMediaHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Determine the base path and ensure the target directory exists
-	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(b))))
-	mediaPath := filepath.Join(basePath, "mnt/web/static/media")
+	// _, b, _, _ := runtime.Caller(0)
+	// basePath := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(b))))
+	// mediaPath := filepath.Join(basePath, "mnt/web/static/media")
+	mediaPath := "/mnt/web/static/media"
 	if err := os.MkdirAll(mediaPath, os.ModePerm); err != nil {
 		http.Error(w, fmt.Sprintf("error creating directory: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Prepare a slice to store uploaded file info
+	// Prepare a slice to store uploaded file info``
 	var uploadedFiles []map[string]interface{}
 
 	// Process each file uploaded

@@ -14,4 +14,5 @@ type Repository interface {
 	CreateMessage(chatID, senderID int64, content string) (int64, error)
 	EditMessage(msgID, senderID int64, newContent string) error
 	DeleteMessage(msgID, senderID int64) error
+	UpdateUnReadMsg(chatID, userID int) error
 }

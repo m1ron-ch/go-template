@@ -51,29 +51,45 @@ func (r *ChatRepository) GetChatByID(chatID int64) (*chat.Chat, error) {
 func (r *ChatRepository) GetAllChats(user *user.User) ([]chat.Chat, error) {
 	var query string
 	if user.RoleID == 1 {
-		query = `SELECT c.id, c.name, c.created_at, m.content AS last_message
+		query = fmt.Sprintf(`SELECT 
+			c.id, 
+			c.name, 
+			c.created_at, 
+			m.content AS last_message,
+			COUNT(m_unread.id) AS unread_count
 		FROM chats c
 		LEFT JOIN messages m 
-				ON m.id = (
-						SELECT m2.id
-						FROM messages m2
-						WHERE m2.chat_id = c.id
-						ORDER BY m2.id DESC
-						LIMIT 1
-				)
-		ORDER BY id DESC;`
+			ON m.id = (
+				SELECT m2.id
+				FROM messages m2
+				WHERE m2.chat_id = c.id
+				ORDER BY m2.id DESC
+				LIMIT 1
+			)
+		LEFT JOIN messages m_unread 
+			ON m_unread.chat_id = c.id AND m_unread.is_read = 0 AND m_unread.sender_id = %d
+		GROUP BY c.id, c.name, c.created_at, m.content
+		ORDER BY c.id DESC;`, user.ID)
 	} else {
-		query = fmt.Sprintf(`SELECT c.id, c.name, c.created_at, m.content AS last_message
+		query = fmt.Sprintf(`SELECT 
+			c.id, 
+			c.name, 
+			c.created_at, 
+			m.content AS last_message,
+			COUNT(m_unread.id) AS unread_count
 		FROM chats c
 		LEFT JOIN messages m 
-				ON m.id = (
-						SELECT m2.id
-						FROM messages m2
-						WHERE m2.chat_id = c.id
-						ORDER BY m2.id DESC
-						LIMIT 1
-				)
-		WHERE c.owner_id = %d;`, user.ID)
+			ON m.id = (
+				SELECT m2.id
+				FROM messages m2
+				WHERE m2.chat_id = c.id
+				ORDER BY m2.id DESC
+				LIMIT 1
+			)
+		LEFT JOIN messages m_unread 
+			ON m_unread.chat_id = c.id AND m_unread.is_read = 0 AND m_unread.sender_id = %d
+		WHERE c.owner_id = %d
+		GROUP BY c.id, c.name, c.created_at, m.content;`, user.ID, user.ID)
 	}
 
 	rows, err := r.db.Query(query)
@@ -85,7 +101,7 @@ func (r *ChatRepository) GetAllChats(user *user.User) ([]chat.Chat, error) {
 	var chatsList []chat.Chat
 	for rows.Next() {
 		var c chat.Chat
-		if err := rows.Scan(&c.ID, &c.Name, &c.CreatedAt, &c.LastMsg); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.CreatedAt, &c.LastMsg, &c.CountUnRead); err != nil {
 			return nil, err
 		}
 		chatsList = append(chatsList, c)
@@ -211,4 +227,11 @@ func (r *ChatRepository) GetMessageByID(msgID int64) (*chat.Message, error) {
 		m.UpdatedAt = &t
 	}
 	return &m, nil
+}
+
+func (r *ChatRepository) UpdateUnReadMsg(chatID, userID int) error {
+	query := `UPDATE messages SET is_read = 1
+		WHERE chat_id = ? AND sender_id != ?`
+	_, err := r.db.Exec(query, chatID, userID)
+	return err
 }

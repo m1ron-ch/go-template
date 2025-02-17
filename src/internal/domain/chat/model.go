@@ -6,10 +6,11 @@ import (
 )
 
 type Chat struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	LastMsg   *string   `json:"last_message"`
-	CreatedAt time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	LastMsg     *string   `json:"last_message"`
+	CreatedAt   time.Time `json:"created_at"`
+	CountUnRead int       `json:"count_un_read"`
 }
 
 type Message struct {

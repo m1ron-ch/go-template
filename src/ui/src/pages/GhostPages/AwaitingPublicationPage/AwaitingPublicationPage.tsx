@@ -78,46 +78,49 @@ const AwaitingPublicationPage: React.FC = () => {
 
   useEffect(() => {
     if (selectedLeaked?.expires) {
-      const expiryTime = new Date(selectedLeaked.expires).getTime();
+      const expiryTime = new Date(selectedLeaked.expires + 'Z').getTime();
+
+      console.log(expiryTime)
+  
       if (!isNaN(expiryTime)) {
-        const interval = setInterval(() => {
+        const updateTimeRemaining = () => {
           const now = new Date().getTime();
           const difference = expiryTime - now;
-
+  
           if (difference > 0) {
             const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const hours = Math.floor(
-              (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-            );
-            const minutes = Math.floor(
-              (difference % (1000 * 60 * 60)) / (1000 * 60)
-            );
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
+  
             setTimeRemaining(`${days}d : ${hours}h : ${minutes}m : ${seconds}s`);
           } else {
             setTimeRemaining("Expired");
             clearInterval(interval);
           }
-        }, 1000);
-
+        };
+  
+        updateTimeRemaining();
+  
+        const interval = setInterval(updateTimeRemaining, 1000);
+  
         return () => clearInterval(interval);
       } else {
         setTimeRemaining("Invalid date");
       }
     }
-  }, [selectedLeaked]);
+  }, [selectedLeaked]);  
 
   const handleCardClick = (leaked: Leaked) => {
     setSelectedLeaked(leaked);
     setIsModalVisible(true);
   };
 
-  // Функция для получения полного значения выплаты
+  // Преобразуем payout в полное значение
   const getFullPayoutValue = (payout: number, payoutUnit: number) => {
-    // Массив коэффициентов для единиц: 0 => x1, 1 => x1000, 2 => x1_000_000, 3 => x1_000_000_000
+    // 0 => x1, 1 => x1000, 2 => x1_000_000, 3 => x1_000_000_000
     const unitValues = [1000, 1_000_000, 1_000_000_000];
-    const multiplier = unitValues[payoutUnit] || 1;
+    const multiplier = unitValues[payoutUnit - 1] || 1;
     return payout * multiplier;
   };
 
@@ -135,7 +138,7 @@ const AwaitingPublicationPage: React.FC = () => {
           <Card
             key={leaked.id}
             hoverable
-            style={{ width: 350, backgroundColor: ' #a5d6a7)' }}
+            style={{ width: 350, backgroundColor: "#a5d6a7" }}
             cover={
               leaked.logo_url ? (
                 <img
@@ -144,7 +147,7 @@ const AwaitingPublicationPage: React.FC = () => {
                   style={{
                     height: 220,
                     objectFit: "contain",
-                    background: 'linear-gradient(135deg,rgb(193, 223, 159), #a5d6a7)'
+                    background: "linear-gradient(135deg,rgb(193, 223, 159), #a5d6a7)",
                   }}
                 />
               ) : null
@@ -193,12 +196,8 @@ const AwaitingPublicationPage: React.FC = () => {
                 <Title level={3} style={{ marginBottom: 0 }}>
                   {selectedLeaked.company_name}
                 </Title>
-                <Tag
-                  color={
-                    selectedLeaked.status ? "green" : "red"
-                  }
-                >
-                  {selectedLeaked.status ? "Active": "Locked"}
+                <Tag color={selectedLeaked.status ? "green" : "red"}>
+                  {selectedLeaked.status ? "Active" : "Locked"}
                 </Tag>
               </Col>
               {selectedLeaked.expires && (
@@ -252,20 +251,17 @@ const AwaitingPublicationPage: React.FC = () => {
                 </Space>
               </Descriptions.Item>
 
-              {/* Заменяем логику выплаты */}
               <Descriptions.Item label="Payout">
                 <Space>
                   <DollarCircleOutlined style={{ color: "#52c41a" }} />
                   <Text>
-                    {
-                      // Форматируем итоговую сумму
-                      new Intl.NumberFormat().format(
-                        getFullPayoutValue(
-                          selectedLeaked.payout,
-                          selectedLeaked.payout_unit
-                        )
+                    {new Intl.NumberFormat().format(
+                      getFullPayoutValue(
+                        selectedLeaked.payout,
+                        selectedLeaked.payout_unit
                       )
-                    }$
+                    )}
+                    $
                   </Text>
                 </Space>
               </Descriptions.Item>
@@ -277,15 +273,13 @@ const AwaitingPublicationPage: React.FC = () => {
               <Descriptions.Item label="Views">
                 <Space>
                   <EyeOutlined />
-                  <Text>
-                    {selectedLeaked.views?.toLocaleString() || "N/A"}
-                  </Text>
+                  <Text>{selectedLeaked.views?.toLocaleString() || "N/A"}</Text>
                 </Space>
               </Descriptions.Item>
 
               <Descriptions.Item label="Expires">
                 {selectedLeaked.expires
-                  ? new Date(selectedLeaked.expires).toLocaleString()
+                  ? new Date(`${selectedLeaked.expires}Z`).toLocaleString()
                   : "N/A"}
               </Descriptions.Item>
             </Descriptions>

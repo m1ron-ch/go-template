@@ -52,8 +52,13 @@ export const Login = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to login');
+        const errorText = await response.text().catch(() => ""); // Пробуем получить текст ошибки
+      
+        const errorMessage = errorText || `Ошибка: ${response.status} ${response.statusText}`;
+      
+        throw new Error(errorMessage);
       }
+      
 
       // const data = await response.json();
 

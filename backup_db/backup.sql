@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- Хост:                         127.0.0.1
--- Версия сервера:               8.0.41 - MySQL Community Server - GPL
+-- Версия сервера:               8.0.40 - MySQL Community Server - GPL
 -- Операционная система:         Win64
--- HeidiSQL Версия:              12.6.0.6765
+-- HeidiSQL Версия:              12.8.0.6908
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -29,17 +29,19 @@ CREATE TABLE IF NOT EXISTS `chats` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.chats: ~1 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.chats: ~0 rows (приблизительно)
+DELETE FROM `chats`;
 INSERT INTO `chats` (`id`, `name`, `created_at`, `owner_id`, `leaked_id`) VALUES
 	(5, 'miron host', '2025-02-12 21:46:38', 41, 36);
 
 -- Дамп структуры для таблица blog_electronchik.contact_us
 CREATE TABLE IF NOT EXISTS `contact_us` (
-  `content` longtext NOT NULL,
-  `json` longtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.contact_us: ~0 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.contact_us: ~1 rows (приблизительно)
+DELETE FROM `contact_us`;
 INSERT INTO `contact_us` (`content`, `json`) VALUES
 	('<div class="page-text-wrapper">\n              <p style="text-align: center;">Contact Us 1</p>\n<p><img style="display: block; margin-left: auto; margin-right: auto;" src="../static/media/Screenshot 2023-10-11 211100_1738977321.png" alt="My description" width="254" height="206"></p>\n            </div>', '{"time":1739343626231,"blocks":[{"id":"bcJcr8cVB9","type":"p","data":{"text":"<p style=\\"text-align: center;\\">Contact Us 1</p>\\n<p><img style=\\"display: block; margin-left: auto; margin-right: auto;\\" src=\\"../static/media/Screenshot 2023-10-11 211100_1738977321.png\\" alt=\\"My description\\" width=\\"254\\" height=\\"206\\"></p>"}}],"version":"2.30.1"}');
 
@@ -49,11 +51,11 @@ CREATE TABLE IF NOT EXISTS `leaked` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `payout` float NOT NULL DEFAULT '0',
   `payout_unit` tinyint NOT NULL DEFAULT '0',
-  `company_name` varchar(255) NOT NULL,
-  `website` varchar(255) DEFAULT NULL,
-  `logo_url` text,
-  `blog` text NOT NULL COMMENT '0-draft, 1-publish,',
-  `description` text NOT NULL,
+  `company_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `website` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `logo_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `blog` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '0-draft, 1-publish,',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `user_id` int NOT NULL,
   `expires` datetime DEFAULT NULL,
   `status` tinyint NOT NULL DEFAULT '0',
@@ -61,24 +63,26 @@ CREATE TABLE IF NOT EXISTS `leaked` (
   `publish` tinyint DEFAULT '0',
   `is_accept` tinyint DEFAULT '2' COMMENT '-1 - отклонено, 0 - ожидание, 1 - принято, 2 - draft',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Дамп данных таблицы blog_electronchik.leaked: ~2 rows (приблизительно)
+DELETE FROM `leaked`;
 INSERT INTO `leaked` (`id`, `created_at`, `payout`, `payout_unit`, `company_name`, `website`, `logo_url`, `blog`, `description`, `user_id`, `expires`, `status`, `builder`, `publish`, `is_accept`) VALUES
-	(34, '2025-02-12 08:24:18', 101, 0, 'localhost', 'http://localhost:3000/', '/static/media/Screenshot 2023-03-01 155647_1739348655.png', 'blog', 'description', 5, NULL, 1, 0, 1, 2),
+	(34, '2025-02-12 08:24:18', 101, 0, 'localhost', 'http://localhost:3000/', '/static/media/Screenshot 2023-03-01 155647_1739348655.png', 'blog', 'description', 5, '2025-03-17 09:54:50', 1, 0, 1, 2),
 	(36, '2025-02-12 21:46:38', 99, 0, 'miron host', 'host.by', '/static/media/Screenshot 2023-03-01 155647_1739427766.png', 'blog', 'des', 41, NULL, 1, 1, 1, 1);
 
 -- Дамп структуры для таблица blog_electronchik.leaked_screenshots
 CREATE TABLE IF NOT EXISTS `leaked_screenshots` (
   `id` int NOT NULL AUTO_INCREMENT,
   `leaked_id` int NOT NULL,
-  `screenshot_url` text NOT NULL,
+  `screenshot_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_leaked` (`leaked_id`),
   CONSTRAINT `fk_leaked` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=186 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=186 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Дамп данных таблицы blog_electronchik.leaked_screenshots: ~4 rows (приблизительно)
+DELETE FROM `leaked_screenshots`;
 INSERT INTO `leaked_screenshots` (`id`, `leaked_id`, `screenshot_url`) VALUES
 	(182, 34, '/static/media/Screenshot 2023-03-19 155502_1739348902.png'),
 	(183, 34, '/static/media/Screenshot 2023-03-12 140951_1739348902.png'),
@@ -89,13 +93,14 @@ INSERT INTO `leaked_screenshots` (`id`, `leaked_id`, `screenshot_url`) VALUES
 CREATE TABLE IF NOT EXISTS `leaked_urls` (
   `id` int NOT NULL AUTO_INCREMENT,
   `leaked_id` int NOT NULL DEFAULT '0',
-  `url` text NOT NULL,
+  `url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_leaked_links_leaked` (`leaked_id`),
   CONSTRAINT `FK_leaked_links_leaked` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.leaked_urls: ~2 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.leaked_urls: ~3 rows (приблизительно)
+DELETE FROM `leaked_urls`;
 INSERT INTO `leaked_urls` (`id`, `leaked_id`, `url`) VALUES
 	(97, 34, 'http://localhost:3000/admin/news'),
 	(98, 34, 'http://localhost:3000/admin/news'),
@@ -117,7 +122,8 @@ CREATE TABLE IF NOT EXISTS `logs` (
   UNIQUE KEY `uid_UNIQUE` (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8311 DEFAULT CHARSET=utf8mb3;
 
--- Дамп данных таблицы blog_electronchik.logs: ~238 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.logs: ~234 rows (приблизительно)
+DELETE FROM `logs`;
 INSERT INTO `logs` (`uid`, `timestamp`, `log_level_id`, `user_id`, `short_message`, `full_message`, `event_type_id`, `ipv4`, `is_successful`, `module`) VALUES
 	(8073, '2024-10-14 12:39:06', 1, 0, 'Запуск сервера', 'Сервер прослушивает 192.168.9.2', 1, '192.168.9.2/24, fe80::be24:11ff:fefa:8abd/64', 1, NULL),
 	(8074, '2024-10-15 10:42:09', 1, 3, 'Редактирование страницы', 'Редактирование страницы: page_id=59, старые данные: url_id=%!d(bool=true), is_visibility=%!v(MISSING)', 20, '192.168.0.70', 1, NULL),
@@ -367,6 +373,7 @@ CREATE TABLE IF NOT EXISTS `log_event_type` (
 ) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb3;
 
 -- Дамп данных таблицы blog_electronchik.log_event_type: ~28 rows (приблизительно)
+DELETE FROM `log_event_type`;
 INSERT INTO `log_event_type` (`uid`, `name`) VALUES
 	(1, 'Сервер'),
 	(2, 'Вход в аккаунт'),
@@ -406,6 +413,7 @@ CREATE TABLE IF NOT EXISTS `log_level` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 
 -- Дамп данных таблицы blog_electronchik.log_level: ~4 rows (приблизительно)
+DELETE FROM `log_level`;
 INSERT INTO `log_level` (`uid`, `name`) VALUES
 	(4, 'DEBUG'),
 	(3, 'ERROR'),
@@ -417,7 +425,7 @@ CREATE TABLE IF NOT EXISTS `messages` (
   `id` int NOT NULL AUTO_INCREMENT,
   `chat_id` int NOT NULL,
   `sender_id` int DEFAULT NULL,
-  `content` text NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `is_read` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -425,9 +433,10 @@ CREATE TABLE IF NOT EXISTS `messages` (
   PRIMARY KEY (`id`),
   KEY `chat_id` (`chat_id`),
   CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`chat_id`) REFERENCES `chats` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.messages: ~5 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.messages: ~8 rows (приблизительно)
+DELETE FROM `messages`;
 INSERT INTO `messages` (`id`, `chat_id`, `sender_id`, `content`, `is_read`, `created_at`, `updated_at`, `is_deleted`) VALUES
 	(4, 5, 4, 'HI!!!!', 0, '2025-02-13 14:33:47', NULL, 0),
 	(5, 5, 41, 'hiiiii!', 0, '2025-02-13 14:40:06', NULL, 0),
@@ -454,6 +463,7 @@ CREATE TABLE IF NOT EXISTS `news` (
 ) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb3;
 
 -- Дамп данных таблицы blog_electronchik.news: ~4 rows (приблизительно)
+DELETE FROM `news`;
 INSERT INTO `news` (`uid`, `created_at`, `update_at`, `is_visibility`, `user_id`, `image`, `title`, `preview`, `content`, `json`) VALUES
 	(33, '2023-05-23 06:27:38', '2025-02-02 14:04:39', 1, 4, 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg', 'Largest US addiction treatment provider notifies patients of data breach', 'BayMark Health Services... personal and health information in a September 2024 breach.', 'BayMark Health Services... personal and health information in a September 2024 breach.', ''),
 	(34, '2024-05-15 13:26:03', '2025-02-02 14:04:40', 1, 4, 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg', 'Bologna FC confirms data breach after RansomHub ransomware attack', 'Bologna Football Club 1909 has confirmed it suffered a ransomware attack...', 'Bologna Football Club 1909 has confirmed it suffered a ransomware attack...', ''),
@@ -462,11 +472,12 @@ INSERT INTO `news` (`uid`, `created_at`, `update_at`, `is_visibility`, `user_id`
 
 -- Дамп структуры для таблица blog_electronchik.order_service
 CREATE TABLE IF NOT EXISTS `order_service` (
-  `content` longtext NOT NULL,
-  `json` longtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.order_service: ~0 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.order_service: ~1 rows (приблизительно)
+DELETE FROM `order_service`;
 INSERT INTO `order_service` (`content`, `json`) VALUES
 	('<div class="page-text-wrapper">\n              <p>Order a service</p>\n            </div>', '{"time":1738738266357,"blocks":[{"id":"YvQ0v2eQZR","type":"p","data":{"text":"<p>Order a service</p>"}}],"version":"2.30.1"}');
 
@@ -476,7 +487,8 @@ CREATE TABLE IF NOT EXISTS `terms_and_conditions` (
   `json` longtext
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.terms_and_conditions: ~0 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.terms_and_conditions: ~1 rows (приблизительно)
+DELETE FROM `terms_and_conditions`;
 INSERT INTO `terms_and_conditions` (`content`, `json`) VALUES
 	('<div class="page-text-wrapper">\n              <p style="text-align: center;">Terms and Conditions</p>\n<p><img style="display: block; margin-left: auto; margin-right: auto;" src="../static/media/Screenshot 2023-09-15 122706_1739345157.png" alt="My description" width="167" height="286"></p>\n            </div>', '{"time":1739349551549,"blocks":[{"id":"1nRlui53wp","type":"p","data":{"text":"<p style=\\"text-align: center;\\">Terms and Conditions</p>\\n<p><img style=\\"display: block; margin-left: auto; margin-right: auto;\\" src=\\"../static/media/Screenshot 2023-09-15 122706_1739345157.png\\" alt=\\"My description\\" width=\\"167\\" height=\\"286\\"></p>"}}],"version":"2.30.1"}');
 
@@ -497,7 +509,8 @@ CREATE TABLE IF NOT EXISTS `used_folders` (
   CONSTRAINT `used_folders_ibfk_2` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.used_folders: ~1 rows (приблизительно)
+-- Дамп данных таблицы blog_electronchik.used_folders: ~0 rows (приблизительно)
+DELETE FROM `used_folders`;
 INSERT INTO `used_folders` (`id`, `user_id`, `leaked_id`, `folder_name`, `archive_number`, `status`, `created_at`) VALUES
 	(1, 41, 36, 'archive_1', '1', 'assigned', '2025-02-13 14:27:25');
 
@@ -523,6 +536,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb3;
 
 -- Дамп данных таблицы blog_electronchik.users: ~3 rows (приблизительно)
+DELETE FROM `users`;
 INSERT INTO `users` (`uid`, `name`, `login`, `password_hash`, `registration_date`, `status_id`, `role_id`, `last_login`, `ipv4`, `login_attempts`, `token`, `token_creation`, `refresh_token`, `email`) VALUES
 	(4, 'root1', 'root1', '$2a$10$gN.fub8knZfwagApDdZgr..ubB9VAEYgDg072eg0TTBh6vPoZgZca', '2025-01-31 23:31:20', 1, 1, NULL, NULL, 0, NULL, NULL, NULL, NULL),
 	(5, 'root', 'root', '$2a$10$gN.fub8knZfwagApDdZgr..ubB9VAEYgDg072eg0TTBh6vPoZgZca', '2025-01-31 23:31:20', 1, 1, NULL, NULL, 0, NULL, NULL, NULL, NULL),

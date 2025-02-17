@@ -190,8 +190,8 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
             l.logo_url,
             l.payout,
             l.payout_unit,
-						l.builder,
-						l.publish,
+			l.builder,
+			l.publish,
             u.uid,
             u.login,
             ls.id AS screenshot_id,
@@ -202,7 +202,7 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
         INNER JOIN users u ON u.uid = l.user_id
         LEFT JOIN leaked_screenshots ls ON ls.leaked_id = l.id
         LEFT JOIN leaked_urls lu ON lu.leaked_id = l.id
-				WHERE l.status = 1 OR l.publish = 1
+				WHERE l.publish = 1
         ORDER BY l.id DESC;
     `
 	rows, err := r.db.Query(query)
@@ -269,9 +269,9 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
 			if expires.Valid {
 				l.Expires = &expires.Time
 			}
-			l.CreatedAtStr = createdAt.Format("2006-01-02 15:04:05")
+			l.CreatedAtStr = createdAt.Local().Format("2006-01-02 15:04:05")
 			if expires.Valid {
-				l.ExpiresStr = expires.Time.Format("2006-01-02 15:04:05")
+				l.ExpiresStr = expires.Time.Local().Format("2006-01-02 15:04:05")
 			} else {
 				l.ExpiresStr = ""
 			}
@@ -351,7 +351,7 @@ func (r *LeakedRepository) GetAllUnActive(userID int) ([]leaked.Leaked, error) {
         INNER JOIN users u ON u.uid = l.user_id
         LEFT JOIN leaked_screenshots ls ON ls.leaked_id = l.id
         LEFT JOIN leaked_urls lu ON lu.leaked_id = l.id
-				WHERE l.status = 0 AND l.publish = 0 AND u.uid = l.user_id AND l.is_accept = 0
+				WHERE l.expires >= NOW()
         ORDER BY l.id DESC;
     `
 	rows, err := r.db.Query(query)
@@ -418,9 +418,9 @@ func (r *LeakedRepository) GetAllUnActive(userID int) ([]leaked.Leaked, error) {
 			if expires.Valid {
 				l.Expires = &expires.Time
 			}
-			l.CreatedAtStr = createdAt.Format("2006-01-02 15:04:05")
+			l.CreatedAtStr = createdAt.Local().Format("2006-01-02 15:04:05")
 			if expires.Valid {
-				l.ExpiresStr = expires.Time.Format("2006-01-02 15:04:05")
+				l.ExpiresStr = expires.Time.Local().Format("2006-01-02 15:04:05")
 			} else {
 				l.ExpiresStr = ""
 			}

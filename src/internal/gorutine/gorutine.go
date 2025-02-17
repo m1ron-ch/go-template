@@ -39,6 +39,7 @@ func PublishScheduledLeaked(leakedService leaked.Service) {
 
 		if before || equal {
 			l.Status = 1
+			l.Publish = 1
 			l.ExpiresStr = ""
 			err := leakedService.Update(l)
 			if err != nil {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Button, Spin, message, Input, Space } from 'antd';
-import { ReloadOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
+import { ReloadOutlined, LoadingOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import moment from 'moment';
 import { AppSettings } from '@/shared';
@@ -49,7 +49,6 @@ export const FilesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchText, setSearchText] = useState<string>('');
 
-  // Получаем данные с сервера при монтировании компонента
   useEffect(() => {
     fetchFiles();
   }, []);
@@ -173,6 +172,22 @@ export const FilesPage: React.FC = () => {
           />
         ),
       },
+      {
+        title: 'Download (decryptor)',
+        dataIndex: 'download_file',
+        key: 'download_file',
+        render: (_: any, fileRecord: FileRecord) => (
+          <div style={{display: "flex", alignItems: "center"}}>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={()=> {}}
+                style={{ marginRight: 8 }}
+              >
+                {fileRecord.folder_name}  
+              </Button>
+          </div>
+        ),
+      }
     ],
     [searchText]
   );

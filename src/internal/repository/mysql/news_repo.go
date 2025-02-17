@@ -81,8 +81,8 @@ func (r *NewsRepository) GetByID(id int64) (*news.News, error) {
 }
 
 func (r *NewsRepository) Create(n news.News) error {
-	_, err := r.db.Exec("INSERT INTO news (title, content, is_visibility, image, user_id, preview, content, json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		n.Title, n.Content, n.IsVisibility, n.Image, n.UserID, n.Preview, n.Content, n.Json)
+	_, err := r.db.Exec("INSERT INTO news (title, content, is_visibility, image, user_id, preview, json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		n.Title, n.Content, n.IsVisibility, n.Image, n.UserID, n.Preview, n.Json)
 	return err
 }
 

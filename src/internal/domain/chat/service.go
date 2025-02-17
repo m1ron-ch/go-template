@@ -14,6 +14,7 @@ type Service interface {
 	CreateMessage(chatID, senderID int64, content string) (int64, error)
 	EditMessage(msgID, senderID int64, newContent string) error
 	DeleteMessage(msgID, senderID int64) error
+	UpdateUnReadMsg(chatID, userID int) error
 }
 
 type service struct {
@@ -62,4 +63,8 @@ func (s *service) UpdateChat(chatID int64, newName string) error {
 
 func (s *service) DeleteChat(chatID int64) error {
 	return s.repo.DeleteChat(chatID)
+}
+
+func (s *service) UpdateUnReadMsg(chatID, userID int) error {
+	return s.repo.UpdateUnReadMsg(chatID, userID)
 }

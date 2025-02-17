@@ -80,7 +80,7 @@ func (h *Handler) GetNewsByID(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateNews(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodPost)
 
-	var newNews news.News // предполагаем, что структура news.News описывает поля новости
+	var newNews news.News
 	if err := json.NewDecoder(r.Body).Decode(&newNews); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
@@ -88,7 +88,7 @@ func (h *Handler) CreateNews(w http.ResponseWriter, r *http.Request) {
 
 	err := h.newsService.CreateNews(newNews)
 	if err != nil {
-		http.Error(w, "Error creating news", http.StatusInternalServerError)
+		http.Error(w, "Error creating news: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -29,6 +29,7 @@ import {
 import axios from "axios";
 import moment from "moment"; // or dayjs
 import { AppSettings } from "@/shared";
+import dayjs from "dayjs";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -168,7 +169,7 @@ export const LeakedPageTabs: React.FC = () => {
     form.setFieldsValue({
       company_name: item.company_name,
       website: item.website || "",
-      expiration: item.expires ? moment(item.expires) : null,
+      expiration: item.expires ? dayjs(item.expires) : null,
       payout_value: item.payout,
       payout_unit: String(item.payout_unit),
     });
@@ -218,7 +219,7 @@ export const LeakedPageTabs: React.FC = () => {
   const handleSave = async () => {
     try {
       // Получаем значения из формы редактирования
-      const mainValues = await form.validateFields();
+      const mainValues = form.getFieldsValue();
       // Получаем значения из формы блога
       // Если нужно, можно провести валидацию createBlogForm, но можно и просто получить их.
       const blogValues = createBlogForm.getFieldsValue();
@@ -237,7 +238,10 @@ export const LeakedPageTabs: React.FC = () => {
           ? selectedLeaked.created_at
           : new Date().toISOString(),
         // Берём company_name либо из основной формы, либо из блога, если необходимо
-        company_name: mainValues.company_name || blogValues.blogCompanyName || "",
+        company_name:
+          blogValues.blogCompanyName ||
+          selectedLeaked?.company_name ||
+          "",
         description:
           blogValues.blogDescription ||
           selectedLeaked?.description ||
@@ -250,7 +254,8 @@ export const LeakedPageTabs: React.FC = () => {
         urls: disclosures, // Отправляем disclosure ссылки
         payout: Number(mainValues.payout_value || 0),
         payout_unit: Number(mainValues.payout_unit || 0),
-        is_accept: selectedLeaked?.is_accept,
+        is_accept: selectedLeaked?.is_accept || 2,
+        publish: expiresStr != "" ? 0 : (selectedLeaked?.publish || 0)
       };
   
       console.log("Sending payload:", JSON.stringify(fullPayload, null, 2));
@@ -506,12 +511,12 @@ export const LeakedPageTabs: React.FC = () => {
                 ]}
               >
                 <h3>{item.company_name}</h3>
-                <p>
+                {/* <p>
                   <strong>Company name:</strong>{" "}
                   {item.company_name.length > 60
                     ? item.company_name.substring(0, 60) + "..."
                     : item.company_name}
-                </p>
+                </p> */}
                 <p>
                   <strong>Expires:</strong>{" "}
                   {item.expires
@@ -591,7 +596,7 @@ export const LeakedPageTabs: React.FC = () => {
                     : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Payout">
-                  {selectedLeaked.payout} / Unit: {selectedLeaked.payout_unit}
+                  {selectedLeaked.payout} / Unit: {["K", "M", "B"][selectedLeaked.payout_unit] || "?"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Created At">
                   {new Date(selectedLeaked.created_at).toLocaleString()}
@@ -650,10 +655,11 @@ export const LeakedPageTabs: React.FC = () => {
               <Form.Item label="Expiration" name="expiration">
               <DatePicker
                 showTime
+                // onChange={(date, dateString) => {
+                //   form.setFieldsValue({ publish_date: date })
+                // }}
                 format="YYYY-MM-DD HH:mm:ss"
-                style={{ width: "100%" }}
-                // disabledDate={(current) => current && current < now}
-                placeholder="Select date/time"
+                style={{ width: '100%' }}
               />
               </Form.Item>
 

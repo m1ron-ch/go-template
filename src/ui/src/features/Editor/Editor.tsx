@@ -8,24 +8,24 @@ import {
 import EditorJS, { BlockToolConstructable } from '@editorjs/editorjs'
 
 import Header from 'editorjs-header-with-alignment'
-import List from '@editorjs/list'
+// import List from '@editorjs/list'
 import Paragraph from 'editorjs-paragraph-with-alignment'
-import Table from '@editorjs/table'
-import Checklist from '@editorjs/checklist'
-import Quote from '@editorjs/quote'
-import Delimiter from '@editorjs/delimiter'
-import Warning from '@editorjs/warning'
-import LinkTool from '@editorjs/link'
-import ImageTool from '@editorjs/image'
-import Raw from '@editorjs/raw'
-import Embed from '@editorjs/embed'
-import Marker from '@editorjs/marker'
-import InlineCode from '@editorjs/inline-code'
-import Attaches from '@editorjs/attaches'
+// import Table from '@editorjs/table'
+// import Checklist from '@editorjs/checklist'
+// import Quote from '@editorjs/quote'
+// import Delimiter from '@editorjs/delimiter'
+// import Warning from '@editorjs/warning'
+// import LinkTool from '@editorjs/link'
+// import ImageTool from '@editorjs/image'
+// import Raw from '@editorjs/raw'
+// import Embed from '@editorjs/embed'
+// import Marker from '@editorjs/marker'
+// import InlineCode from '@editorjs/inline-code'
+// import Attaches from '@editorjs/attaches'
 
 import edjsHTML from 'editorjs-html'
 import styles from './Editor.module.scss'
-import { AppSettings } from '@/shared'
+// import { AppSettings } from '@/shared'
 import QuillParagraph from './MyTools/QuillParagraph'
 
 interface EditorProps {
@@ -65,34 +65,34 @@ export const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
             class: Paragraph as unknown as BlockToolConstructable,
             inlineToolbar: true,
           },
-          list: { class: List, inlineToolbar: true },
-          quote: { class: Quote, inlineToolbar: true },
-          marker: { class: Marker, shortcut: 'CMD+SHIFT+M' },
-          inlineCode: { class: InlineCode, shortcut: 'CMD+SHIFT+C' },
-          table: Table,
-          checklist: Checklist,
-          delimiter: Delimiter,
-          warning: Warning,
-          linkTool: LinkTool,
-          image: {
-            class: ImageTool as BlockToolConstructable,
-            config: {
-              endpoints: {
-                byFile: `${AppSettings.API_URL}media/upload`,
-                byUrl: `${AppSettings.API_URL}media/upload-url`,
-              },
-              field: 'file',
-              inlineToolbar: true,
-            },
-          },
-          raw: Raw,
-          embed: Embed,
-          attaches: {
-            class: Attaches as BlockToolConstructable,
-            config: {
-              endpoint: `${AppSettings.API_URL}uploadFile`,
-            },
-          },
+          // list: { class: List, inlineToolbar: true },
+          // quote: { class: Quote, inlineToolbar: true },
+          // marker: { class: Marker, shortcut: 'CMD+SHIFT+M' },
+          // inlineCode: { class: InlineCode, shortcut: 'CMD+SHIFT+C' },
+          // table: Table,
+          // checklist: Checklist,
+          // delimiter: Delimiter,
+          // warning: Warning,
+          // linkTool: LinkTool,
+          // image: {
+          //   class: ImageTool as BlockToolConstructable,
+          //   config: {
+          //     endpoints: {
+          //       byFile: `${AppSettings.API_URL}media/upload`,
+          //       byUrl: `${AppSettings.API_URL}media/upload-url`,
+          //     },
+          //     field: 'file',
+          //     inlineToolbar: true,
+          //   },
+          // },
+          // raw: Raw,
+          // embed: Embed,
+          // attaches: {
+          //   class: Attaches as BlockToolConstructable,
+          //   config: {
+          //     endpoint: `${AppSettings.API_URL}uploadFile`,
+          //   },
+          // },
         },
       })
     }

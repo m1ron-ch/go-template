@@ -35,5 +35,5 @@ services:
     volumes:
       - ./mnt/web/configs/:/mnt/web/configs/
       - ./mnt/web/static/:/mnt/web/static/
-      - ./mnt/web/static/media:/mnt/web/static/media
+      # - ./mnt/web/static/media:/mnt/web/static/media
       - ./src/ui/:/src/ui/

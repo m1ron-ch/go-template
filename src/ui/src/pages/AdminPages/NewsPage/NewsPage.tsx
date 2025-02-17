@@ -98,7 +98,7 @@ export const NewsPage = () => {
   const [title, setTitle] = useState<string>('') // Title
   const [preview, setPreview] = useState<string>('') // Preview (short description)
   const [content, setContent] = useState<{ html: string; json: any }>({ html: '', json: {} })
-  const [isVisibility, setIsVisibility] = useState<number>(0)
+  const [isVisibility, setIsVisibility] = useState<number>(1)
   const [, setNewsType] = useState<number>(0)
   const [image, setImage] = useState<ImageData>({
     upload_date: '',
@@ -371,7 +371,7 @@ export const NewsPage = () => {
     setTitle('')
     setPreview('')
     setContent({ html: '', json: { blocks: [] } })
-    setIsVisibility(0)
+    setIsVisibility(1)
     setNewsType(0)
     setImage({ filename: '', url: '', type: '', upload_date: '' })
 

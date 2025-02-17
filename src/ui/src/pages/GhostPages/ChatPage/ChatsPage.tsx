@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Space, Tag } from 'antd'
+import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Space, Tag, Badge } from 'antd'
 import s from './ChatsPage.module.scss'
 import { AppSettings } from '@/shared'
 import { SendOutlined } from '@ant-design/icons'
@@ -28,6 +28,7 @@ interface Chat {
   lastMessage: string
   messages: Message[]
   lastMessageTime?: string
+  count_un_read: number
 }
 
 interface ChatsPageProps {
@@ -91,6 +92,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
             lastMessage: item.last_message ? item.last_message : <i>Empty chat</i>,
             lastMessageTime,
             messages: [],
+            count_un_read: item.count_un_read,
           }
         })
         setChats(updatedChats)
@@ -184,7 +186,7 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
         text: m.content,
         sender: m.sender.role_id != 1 ? 'me' : 'other',
         sender_name: m.sender.role_id === 1 ? "campaign's representative/recovery company" : m.sender?.login ,
-        isRead: true,
+        isRead: m.is_read,
         created_at: m.created_at
       }))
       setChats(prev =>
@@ -235,15 +237,19 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
   const handleWsEditMessage = (data: any) => {
     setChats(prevChats =>
       prevChats.map(chat => {
-        if (chat.id !== activeChatId) return chat
-
-        const updated = chat.messages.map(m =>
+        if (chat.id !== data.chat_id) return chat
+  
+        const updatedMessages = chat.messages.map(m =>
           m.id === data.message_id
             ? { ...m, text: data.content }
             : m
         )
-        const lastMsg = updated.length > 0 ? updated[updated.length - 1].text : ''
-        return { ...chat, messages: updated, lastMessage: lastMsg }
+        const lastMsg = updatedMessages.length > 0 ? updatedMessages[updatedMessages.length - 1].text : ''
+        return {
+          ...chat,
+          messages: updatedMessages,
+          lastMessage: lastMsg,
+        }
       })
     )
   }
@@ -251,11 +257,15 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
   const handleWsDeleteMessage = (data: any) => {
     setChats(prevChats =>
       prevChats.map(chat => {
-        if (chat.id !== activeChatId) return chat
-
+        if (chat.id !== data.chat_id) return chat
+  
         const filtered = chat.messages.filter(m => m.id !== data.message_id)
         const lastMsg = filtered.length > 0 ? filtered[filtered.length - 1].text : ''
-        return { ...chat, messages: filtered, lastMessage: lastMsg }
+        return {
+          ...chat,
+          messages: filtered,
+          lastMessage: lastMsg,
+        }
       })
     )
   }
@@ -320,18 +330,42 @@ export const ChatsPage: React.FC<ChatsPageProps> = ({ leaked_id }) => {
           dataSource={chats}
           renderItem={(chat) => (
             <List.Item
-              className={chat.id === activeChatId ? s.activeChat : ''}
               onClick={() => handleSelectChat(chat.id)}
+              style={{ cursor: 'pointer', padding: '8px 16px' }}
             >
-              <List.Item.Meta
-                style={{ marginLeft: '15px' }}
-                avatar={<Avatar>{chat.name[0]}</Avatar>}
-                title={chat.name}
-                description={<span>
-                  {chat.lastMessage}{' '}
-                  <small style={{ color: '#999' }}>{chat.lastMessageTime}</small>
-                </span>}
-              />
+              <div style={{ width: '100%' }}>
+                {/* Первая строка: аватар + имя чата (слева), дата (справа) */}
+                <div 
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: 4
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Avatar style={{ marginRight: 8 }}>{chat.name?.[0]}</Avatar>
+                    <strong>{chat.name}</strong>
+                  </div>
+                  <span style={{ color: '#999' }}>{chat.lastMessageTime}</span>
+                </div>
+
+                {/* Вторая строка: последнее сообщение (слева), счётчик непрочитанных (справа) */}
+                <div 
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <span style={{ color: '#555' }}>{chat.lastMessage}</span>
+                  {chat.count_un_read > 0 && (
+                    <Badge
+                      count={chat.count_un_read}
+                      style={{ backgroundColor: '#52c41a' }}
+                    />
+                  )}
+                </div>
+              </div>
             </List.Item>
           )}
         />
