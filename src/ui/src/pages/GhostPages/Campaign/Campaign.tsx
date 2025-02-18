@@ -9,7 +9,6 @@ import {
   Input,
   Upload,
   Select,
-  Modal,
   message,
   Space,
   Popconfirm,
@@ -22,12 +21,13 @@ import {
   DeleteOutlined,
   UploadOutlined,
   ReloadOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import moment from "moment";
 
 import { AppSettings } from "@/shared/const/appSettings";
-import { ChatsPage } from "../ChatPage";
+import { ChatsWithTabs } from "../ChatPage/ChatsWithTabs";
+import dayjs from "dayjs";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -60,7 +60,7 @@ interface Campaign {
   description?: string;
   website: string;
   user?: User;
-  expires: string;
+  expires: dayjs.Dayjs;
   logo_url?: string;
   screenshots: Screenshot[];
   urls: UrlItem[];
@@ -77,15 +77,14 @@ const CampaignsDashboard: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
 
   const [activeCardTab, setActiveCardTab] = useState<string>("1");
 
-  // Форма "Edit" (используется и в карточке, и в модалке — чтобы не дублировать)
-  const [editForm] = Form.useForm();
-  // Форма "Create Blog" (используется в карточке, но при желании можно подключить в модалке)
-  const [blogForm] = Form.useForm();
+  const [form] = Form.useForm();
+
+  // "Create Blog" tab:
+  const [createBlogForm] = Form.useForm();
 
   // Локальные состояния для вкладки "Create Blog"
   const [disclosures, setDisclosures] = useState<UrlItem[]>([]);
@@ -141,6 +140,7 @@ const CampaignsDashboard: React.FC = () => {
   // 2) Обработка клика по строке
   // ==============================
   const handleRowClick = (record: Campaign) => {
+    record.expires = dayjs(record.expires)
     setSelectedCampaign(record);
     setActiveCardTab("1");
   };
@@ -152,9 +152,8 @@ const CampaignsDashboard: React.FC = () => {
     // Полностью сбрасываем формы/состояния
     setSelectedCampaign(null);
     setIsViewMode(false);
-    setIsModalVisible(true);
-    editForm.resetFields();
-    blogForm.resetFields();
+    form.resetFields();
+    createBlogForm.resetFields();
     setLocalLogoUrl("");
     setLocalScreenshots([]);
     setDisclosures([]);
@@ -197,8 +196,8 @@ const CampaignsDashboard: React.FC = () => {
       fillEditForm(selectedCampaign);
       fillBlogForm(selectedCampaign);
     } else {
-      editForm.resetFields();
-      blogForm.resetFields();
+      form.resetFields();
+      createBlogForm.resetFields();
       setLocalLogoUrl("");
       setLocalScreenshots([]);
       setDisclosures([]);
@@ -206,109 +205,87 @@ const CampaignsDashboard: React.FC = () => {
   }, [selectedCampaign]);
 
   // Универсальная функция для заполнения editForm
-  const fillEditForm = (c: Campaign) => {
-    // Например, поля:
-    editForm.setFieldsValue({
-      company_name: c.company_name || "",
+  function fillEditForm(c: Campaign) {
+    form.setFieldsValue({
       website: c.website || "",
-      expire: c.expires ? moment(c.expires) : null,
-      payoutValue: c.payout || 0,
-      payoutUnit: c.payout_unit?.toString() ?? "0",
+      // Делаем expiration -> moment, если есть
+      expiration: c.expires ? dayjs(c.expires) : null,
+  
+      payout_value: c.payout || 0,
+      payout_unit: c.payout_unit?.toString() ?? "0",
     });
-  };
+  }
 
   // ==============================
   // Сохранение (Add/Edit) — в модалке
   // ==============================
   const handleSave = async () => {
     try {
-      // 1) Валидируем/считываем поля из editForm
-      const editValues = await editForm.validateFields();
+      // Получаем значения из формы редактирования
+      const mainValues = form.getFieldsValue();
+      // Получаем значения из формы блога
+      // Если нужно, можно провести валидацию createBlogForm, но можно и просто получить их.
+      const blogValues = createBlogForm.getFieldsValue();
   
-      // 2) Считываем (при желании валидируем) поля из blogForm
-      // Если хотим обязательно валидировать блог, используем validateFields().
-      // Если поля блога не всегда обязательны, можно просто getFieldsValue().
-      const blogValues = blogForm.getFieldsValue();
-  
-      // Преобразуем дату
-      const expiresStr = editValues.expire
-        ? editValues.expire.toISOString()
+      const expiresStr = mainValues.expiration
+        ? mainValues.expiration.toISOString()
         : null;
   
-      // Создаём или редактируем?
-      const isNew = !selectedCampaign;
-  
-      // Собираем финальный объект для бэкенда,
-      // часть полей берем из editForm, часть из blogForm.
-      const newData = {
-        // id, status и т.п. берём из выбранной кампании, если есть
-        id: selectedCampaign?.id ?? 0,
-        status: selectedCampaign?.status || 0,
-  
-        // blog: берём из блога (blogText)
+      // Собираем полный объект данных для отправки,
+      // объединяя данные из обеих форм.
+      let fullPayload = {
+        id: selectedCampaign ? selectedCampaign.id : 0,
+        status: selectedCampaign ? selectedCampaign.status : 0,
         blog: blogValues.blogText || selectedCampaign?.blog || "",
-  
-        // description: берём из блога (blogDescription)
-        description:
-          blogValues.blogDescription || selectedCampaign?.description || "",
-  
-        // Лого и скриншоты тоже берём из локального состояния
-        // (так же, как у вас уже сделано)
-        logo_url: localLogoUrl || selectedCampaign?.logo_url || "",
-        screenshots:
-          localScreenshots.length > 0
-            ? localScreenshots
-            : selectedCampaign?.screenshots || [],
-        urls:
-          disclosures.length > 0 ? disclosures : selectedCampaign?.urls || [],
-  
-        // Поля из формы редактирования (editValues)
-        payout: Number(editValues.payoutValue || 0),
-        payout_unit: Number(editValues.payoutUnit || 0),
-        website: editValues.website || "",
+        created_at: selectedCampaign
+          ? selectedCampaign.created_at
+          : new Date().toISOString(),
+        // Берём company_name либо из основной формы, либо из блога, если необходимо
         company_name:
-          editValues.company_name || blogValues.blogCompanyName || "",
-        builder: selectedCampaign?.builder || 0,
-        expires: expiresStr || "",
-  
-        // Переиспользуем user, если кампания уже есть.
-        // Или формируем из текущего авторизованного пользователя.
-        user: selectedCampaign
-          ? selectedCampaign.user
-          : {
-              user_id: user?.user_id || 0,
-              id: user?.user_id || 0,
-              name: user?.name || "",
-              login: user?.login || "",
-              role_id: user?.role_id || 0,
-              status_id: user?.status_id || 0,
-            },
+          blogValues.blogCompanyName ||
+          selectedCampaign?.company_name ||
+          "",
+        description:
+          blogValues.blogDescription ||
+          selectedCampaign?.description ||
+          "",
+        website: mainValues.website || null,
+        user: { id: user?.user_id },
+        expires: expiresStr,
+        logo_url: localLogoUrl, // Лого теперь отправляется
+        screenshots: localScreenshots, // Отправляем загруженные скриншоты
+        urls: disclosures, // Отправляем disclosure ссылки
+        payout: Number(mainValues.payout_value || 0),
+        payout_unit: Number(mainValues.payout_unit || 0),
+        is_accept: selectedCampaign?.is_accept || 2,
+        publish: expiresStr != "" ? 0 : (selectedCampaign?.publish || 0)
       };
   
-      // Выбираем PUT или POST
-      const method = isNew ? "POST" : "PUT";
-      const url = isNew
-        ? `${AppSettings.API_URL}/campaign`
-        : `${AppSettings.API_URL}/leakeds/${selectedCampaign?.id}`;
+      console.log("Sending payload:", JSON.stringify(fullPayload, null, 2));
   
-      console.log("Отправляем на бекенд:", newData);
+      const method = selectedCampaign ? "PUT" : "POST";
+      const endpoint = selectedCampaign
+        ? `${AppSettings.API_URL}/leakeds/${selectedCampaign.id}`
+        : `${AppSettings.API_URL}/campaign`;
   
-      const response = await fetch(url, {
+      const response = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(newData),
+        body: JSON.stringify(fullPayload),
       });
+  
       if (!response.ok) {
-        throw new Error("Failed to save campaign");
+        throw new Error("Failed to save data");
       }
   
-      message.success(isNew ? "Campaign added!" : "Campaign updated!");
-      setIsModalVisible(false);
+      message.success(
+        selectedCampaign ? "Campaign updated successfully" : "Campaign added successfully"
+      );
       fetchCampaigns();
     } catch (error) {
-      console.error("Error saving campaign:", error);
-      message.error("Error saving campaign");
+      console.error("Error saving leak:", error);
+      message.error("Error saving leak");
     }
   };
 
@@ -326,16 +303,17 @@ const CampaignsDashboard: React.FC = () => {
   //   fillBlogForm(item);
   // };
 
-  const fillBlogForm = (c: Campaign) => {
-    blogForm.setFieldsValue({
+  function fillBlogForm(c: Campaign) {
+    createBlogForm.setFieldsValue({
       blogCompanyName: c.company_name || "",
       blogDescription: c.description || "",
       blogText: c.blog || "",
+      // Если нужно, здесь можно ещё что-то заполнить
     });
     setLocalLogoUrl(c.logo_url || "");
     setLocalScreenshots(c.screenshots || []);
     setDisclosures(c.urls || []);
-  };
+  }
 
   const addDisclosure = () => {
     setDisclosures((prev) => [...prev, { id: Date.now(), url: "" }]);
@@ -415,7 +393,7 @@ const CampaignsDashboard: React.FC = () => {
   const handlePublishBlog = async () => {
     if (!selectedCampaign) return;
     try {
-      const values = await blogForm.validateFields();
+      const values = await createBlogForm.validateFields();
       const updatedCampaign: Campaign = {
         ...selectedCampaign,
         company_name: values.blogCompanyName || "",
@@ -588,14 +566,14 @@ const CampaignsDashboard: React.FC = () => {
       key: "actions",
       render: (_, record) => (
         <Space>
-          {/* <Button
+           <Button
             icon={<EyeOutlined />}
             onClick={(e) => {
               e.stopPropagation();
-              handleViewCampaign(record);
+              handleRowClick(record);
             }}
-          />
-          <Button
+          /> 
+          {/* <Button
             icon={<EditOutlined />}
             onClick={(e) => {
               e.stopPropagation();
@@ -621,7 +599,7 @@ const CampaignsDashboard: React.FC = () => {
 
   useEffect(() => {
     if (selectedCampaign?.expires) {
-      const expiryTime = new Date(selectedCampaign.expires).getTime();
+      const expiryTime = selectedCampaign.expires.date();
       if (isNaN(expiryTime)) {
         setTimeRemaining("Invalid date");
         return;
@@ -702,11 +680,11 @@ const CampaignsDashboard: React.FC = () => {
                     </Descriptions.Item>
                     <Descriptions.Item label="Expires">
                       {selectedCampaign.expires
-                        ? new Date(selectedCampaign.expires).toLocaleString()
+                        ? selectedCampaign.expires.toLocaleString()
                         : "N/A"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Payout">
-                      {selectedCampaign.payout} / Unit: {selectedCampaign.payout_unit}
+                      {selectedCampaign.payout} ({["K", "M", "B"][selectedCampaign.payout_unit || 0] || "?"})
                     </Descriptions.Item>
                     <Descriptions.Item label="Created At">
                       {new Date(selectedCampaign.created_at).toLocaleString()}
@@ -767,50 +745,33 @@ const CampaignsDashboard: React.FC = () => {
                 </Button>
               </TabPane>
 
-              <TabPane tab="Edit" key="3">
-                <Form form={editForm} layout="vertical">
-                  <Form.Item
-                    label="Company Name"
-                    name="company_name"
-                    rules={[
-                      { required: true, message: "Please enter company name" },
-                    ]}
-                  >
-                    <Input placeholder="Acme Inc." />
+              <TabPane tab="Edit" key="edit" disabled={isViewMode}>
+                <Form form={form} layout="vertical">
+                  <Form.Item label="Website" name="website">
+                    <Input placeholder="E.g. https://example.com" />
                   </Form.Item>
-
-                  <Form.Item
-                    label="Website"
-                    name="website"
-                    rules={[{ required: true, message: "Please enter website" }]}
-                  >
-                    <Input placeholder="https://example.com" />
+    
+                  <Form.Item label="Expiration" name="expiration">
+                  <DatePicker
+                    showTime
+                    // onChange={(date, dateString) => {
+                    //   form.setFieldsValue({ publish_date: date })
+                    // }}
+                    format="YYYY-MM-DD HH:mm:ss"
+                    style={{ width: '100%' }}
+                  />
                   </Form.Item>
-
-                  <Form.Item label="Expiration" name="expire">
-                    <DatePicker
-                      showTime
-                      format="YYYY-MM-DD HH:mm:ss"
-                      style={{ width: "100%" }}
-                      placeholder="Select date/time"
-                    />
-                  </Form.Item>
-
+    
                   <Form.Item label="Target Payout (USD)">
                     <Space>
                       <Form.Item
-                        name="payoutValue"
+                        name="payout_value"
                         noStyle
-                        rules={[
-                          {
-                            pattern: /^[0-9]*$/,
-                            message: "Must be a number",
-                          },
-                        ]}
+                        rules={[{ pattern: /^[0-9]*$/, message: "Must be a number" }]}
                       >
                         <Input style={{ width: 100 }} placeholder="Amount" />
                       </Form.Item>
-                      <Form.Item name="payoutUnit" noStyle initialValue="0">
+                      <Form.Item name="payout_unit" noStyle initialValue="0">
                         <Select style={{ width: 80 }}>
                           <Option value="0">K</Option>
                           <Option value="1">M</Option>
@@ -822,72 +783,63 @@ const CampaignsDashboard: React.FC = () => {
                 </Form>
               </TabPane>
 
-              <TabPane tab="Create Blog" key="4">
-                <Form form={blogForm} layout="vertical">
+              <TabPane tab="Create Blog" key="blog" disabled={isViewMode}>
+                <Form layout="vertical" form={createBlogForm}>
                   <Form.Item
                     label="Company Name"
                     name="blogCompanyName"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please enter company name!",
-                      },
-                    ]}
+                    rules={[{ required: true, message: "Please enter company name!" }]}
                   >
                     <Input />
                   </Form.Item>
-
+    
                   <Form.Item label="Logo">
                     {localLogoUrl ? (
-                      <div style={{ marginBottom: 12 }}>
+                      <div>
                         <img
                           src={localLogoUrl}
-                          alt="Logo"
-                          style={{
-                            maxWidth: 200,
-                            display: "block",
-                            marginBottom: 8,
-                          }}
+                          alt="Current Logo"
+                          style={{ maxWidth: 200, display: "block", marginBottom: 8 }}
                         />
-                        <Button danger onClick={() => setLocalLogoUrl("")}>
+                        <Button
+                          danger
+                          onClick={() => setLocalLogoUrl("")}
+                          style={{ marginBottom: 8 }}
+                        >
                           Remove Logo
                         </Button>
                       </div>
                     ) : (
-                      <Upload {...handleLogoUpload} showUploadList={false}>
+                      <Upload {...handleLogoUpload}>
                         <Button icon={<UploadOutlined />}>Upload Logo</Button>
                       </Upload>
                     )}
                   </Form.Item>
-
+    
                   <Form.Item label="Description" name="blogDescription">
-                    <TextArea rows={3} placeholder="Short description..." />
+                    <TextArea rows={3} placeholder="Enter short description..." />
                   </Form.Item>
-
-                  <Form.Item label="Blog Text" name="blogText">
+    
+                  <Form.Item label="Blog" name="blogText">
                     <TextArea rows={5} placeholder="We hacked CrowdStrike..." />
                   </Form.Item>
-
+    
+                  {/* Disclosures */}
                   <Form.Item label="Disclosures">
                     <Button
                       type="dashed"
                       onClick={addDisclosure}
                       style={{ marginBottom: 8 }}
                     >
-                      + Add Disclosure
+                      + Add Disclosure Link
                     </Button>
                     {disclosures.map((d) => (
-                      <Space
-                        key={d.id}
-                        style={{ display: "flex", marginBottom: 8 }}
-                      >
+                      <Space key={d.id} style={{ display: "flex", marginBottom: 8 }}>
                         <Input
-                          style={{ width: "400px" }}
-                          placeholder="Enter URL"
+                          style={{ width: "500px" }}
+                          placeholder="Enter disclosure link"
                           value={d.url}
-                          onChange={(e) =>
-                            updateDisclosure(d.id, e.target.value)
-                          }
+                          onChange={(e) => updateDisclosure(d.id, e.target.value)}
                         />
                         <Button
                           danger
@@ -897,37 +849,42 @@ const CampaignsDashboard: React.FC = () => {
                       </Space>
                     ))}
                   </Form.Item>
-
+    
+                  {/* Screenshots */}
                   <Form.Item label="Screenshots">
-                    <Upload
-                      {...handleScreenshotUpload}
-                      multiple
-                      showUploadList={false}
-                    >
-                      <Button icon={<UploadOutlined />}>
-                        Upload Screenshots
-                      </Button>
+                    <Upload {...handleScreenshotUpload} multiple showUploadList={false}>
+                      <Button icon={<UploadOutlined />}>Upload Screenshots</Button>
                     </Upload>
-
-                    <div
-                      style={{
-                        marginTop: 16,
-                        display: "flex",
-                        gap: 12,
-                        flexWrap: "wrap",
-                      }}
-                    >
+    
+                    {/* Галерея загруженных скриншотов */}
+                    <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 12 }}>
                       {localScreenshots.map((s) => (
-                        <div key={s.id} style={{ position: "relative" }}>
+                        <div
+                          key={s.id}
+                          style={{
+                            position: "relative",
+                            width: 100,
+                            height: 100,
+                            borderRadius: 8,
+                            overflow: "hidden",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                            transition: "transform 0.2s",
+                          }}
+                        >
+                          {/* Увеличение при наведении */}
                           <img
                             src={s.image_url}
-                            alt="screenshot"
+                            alt="Screenshot"
                             style={{
-                              width: 100,
-                              height: 100,
+                              width: "100%",
+                              height: "100%",
                               objectFit: "cover",
+                              borderRadius: 8,
+                              cursor: "pointer",
                             }}
                           />
+    
+                          {/* Кнопка удаления в правом верхнем углу */}
                           <Button
                             type="text"
                             danger
@@ -939,14 +896,19 @@ const CampaignsDashboard: React.FC = () => {
                               top: 4,
                               right: 4,
                               backgroundColor: "rgba(0,0,0,0.6)",
-                              color: "#fff",
+                              color: "white",
+                              borderRadius: "50%",
+                              width: 24,
+                              height: 24,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           />
                         </div>
                       ))}
                     </div>
                   </Form.Item>
-
                   <Form.Item>
                     <Button type="primary" onClick={handlePublishBlog}>
                       Publish
@@ -955,7 +917,7 @@ const CampaignsDashboard: React.FC = () => {
                 </Form>
               </TabPane>
               <TabPane tab="Chats" key="5">
-                <ChatsPage leaked_id={selectedCampaign.id} />
+                <ChatsWithTabs leaked_id={selectedCampaign.id} />
               </TabPane>
             </Tabs>
             {/* Кнопка "Save" для вкладки "Edit" в карточке */}
@@ -970,124 +932,6 @@ const CampaignsDashboard: React.FC = () => {
           </Card>
         </>
       )}
-
-      {/* Модалка */}
-      <Modal
-        title={
-          isViewMode
-            ? "View Campaign"
-            : selectedCampaign
-            ? "Edit Campaign"
-            : "Add Campaign"
-        }
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        width={800}
-        footer={
-          isViewMode
-            ? [
-                <Button key="close" onClick={() => setIsModalVisible(false)}>
-                  Close
-                </Button>,
-              ]
-            : [
-                <Button key="save" type="primary" onClick={handleSave}>
-                  Save
-                </Button>,
-              ]
-        }
-      >
-        <Tabs defaultActiveKey="overview">
-          {/* <TabPane tab="Overview" key="overview" disabled={!selectedCampaign}>
-            {selectedCampaign ? (
-              <Descriptions bordered column={1} size="small">
-                <Descriptions.Item label="ID">
-                  {selectedCampaign.id}
-                </Descriptions.Item>
-                <Descriptions.Item label="Status">
-                  {selectedCampaign.status ? "Active" : "Locked"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Expire">
-                  {selectedCampaign.expires || "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Created">
-                  {selectedCampaign.created_at}
-                </Descriptions.Item>
-                {selectedCampaign.logo_url && (
-                  <Descriptions.Item label="Logo">
-                    <img
-                      src={selectedCampaign.logo_url}
-                      alt="logo"
-                      style={{ maxWidth: 120 }}
-                    />
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
-            ) : (
-              <p>No data to show</p>
-            )}
-          </TabPane> */}
-
-          <TabPane tab="Edit" key="edit" disabled={isViewMode}>
-            <Form form={editForm} layout="vertical">
-              <Form.Item
-                label="Company Name"
-                name="company_name"
-                rules={[{ required: true, message: "Please enter company name" }]}
-              >
-                <Input placeholder="Acme Inc." />
-              </Form.Item>
-
-              <Form.Item
-                label="Website"
-                name="website"
-                rules={[{ required: true, message: "Please enter website" }]}
-              >
-                <Input placeholder="https://example.com" />
-              </Form.Item>
-
-              <Form.Item label="Description" name="blogDescription">
-                <TextArea rows={3} placeholder="Short description..." />
-              </Form.Item>
-
-              {/* <Form.Item label="Expiration" name="expire">
-                <DatePicker
-                  showTime
-                  format="YYYY-MM-DD HH:mm:ss"
-                  style={{ width: "100%" }}
-                  placeholder="Select date/time"
-                />
-              </Form.Item>
-
-              <Form.Item label="Target Payout (USD)">
-                <Space>
-                  <Form.Item
-                    name="payoutValue"
-                    noStyle
-                    rules={[
-                      { pattern: /^[0-9]*$/, message: "Must be a number" },
-                    ]}
-                  >
-                    <Input style={{ width: 100 }} placeholder="Amount" />
-                  </Form.Item>
-                  <Form.Item name="payoutUnit" noStyle initialValue="0">
-                    <Select style={{ width: 80 }}>
-                      <Option value="0">K</Option>
-                      <Option value="1">M</Option>
-                      <Option value="2">B</Option>
-                    </Select>
-                  </Form.Item>
-                </Space>
-              </Form.Item> */}
-            </Form>
-          </TabPane>
-
-          {/* <TabPane tab="Create Blog" key="blog" disabled={isViewMode}>
-            <p>Здесь при необходимости можно продублировать вкладку "Create Blog", если нужно.</p>
-            <p>Или убрать вовсе, чтобы не было дублирования.</p>
-          </TabPane> */}
-        </Tabs>
-      </Modal>
     </div>
   );
 };

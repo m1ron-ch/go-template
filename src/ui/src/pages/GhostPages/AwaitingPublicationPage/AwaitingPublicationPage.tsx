@@ -120,7 +120,7 @@ const AwaitingPublicationPage: React.FC = () => {
   const getFullPayoutValue = (payout: number, payoutUnit: number) => {
     // 0 => x1, 1 => x1000, 2 => x1_000_000, 3 => x1_000_000_000
     const unitValues = [1000, 1_000_000, 1_000_000_000];
-    const multiplier = unitValues[payoutUnit - 1] || 1;
+    const multiplier = unitValues[payoutUnit] || 1;
     return payout * multiplier;
   };
 

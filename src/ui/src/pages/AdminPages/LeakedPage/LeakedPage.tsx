@@ -529,7 +529,7 @@ export const LeakedPageTabs: React.FC = () => {
                 </p>
                 <p>
                   <strong>Blog:</strong> {" "} 
-                  {item.publish == 1 ? <Tag color={'green'}> {'Publish'} </Tag> : <Tag color={'gray'}> {'Draft'} </Tag>}
+                  {item.publish == 1 ? <Tag color={'green'}> {'Publish'} </Tag> : (item.publish == 0 && !item.expires) ? <Tag color={'grey'}> {'Draft'} </Tag> : <Tag color={'orange'}> {'Awaiting'} </Tag>}
                 </p>
                 {item.is_accept == 0 && item.user.role_id != 1 && (
                   <div>

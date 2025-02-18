@@ -247,3 +247,33 @@ func (h *Handler) UploadMediaHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *Handler) DeleteMediaHandle(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodDelete)
+
+	type MediaRequest struct {
+		Filename string `json:"filename"`
+	}
+	var mediaRequest MediaRequest
+	err := json.NewDecoder(r.Body).Decode(&mediaRequest)
+	if err != nil {
+		http.Error(w, "Ошибка декодирования JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	filePath := filepath.Join("/mnt/web/static/media", mediaRequest.Filename)
+
+	_, err = os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = os.Remove(filePath)
+	if err != nil {
+		return
+	}
+}

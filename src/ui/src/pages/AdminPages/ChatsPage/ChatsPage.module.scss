@@ -25,6 +25,13 @@
   }
 }
 
+.dateDivider {
+  margin: 16px 0;
+  text-align: center;
+  color: #888;
+  font-weight: 500;
+}
+
 .activeChat {
   background-color: #e9f4ff;
 }
@@ -54,28 +61,31 @@
 }
 
 /* Сообщения */
-.messageItem {
-  display: inline-block;
-  padding: 10px 14px;
-  margin: 8px 0;
-  border-radius: 10px;
-  max-width: 60%;
-  position: relative;
-  font-size: 14px;
-  line-height: 1.4;
-}
+// .messageItem {
+//   display: inline-block;
+//   padding: 10px 14px;
+//   margin: 8px 0;
+//   border-radius: 10px;
+//   max-width: 60%;
+//   position: relative;
+//   font-size: 14px;
+//   line-height: 1.4;
+// }
 
-.myMessage {
-  background-color: #d2f8d2; /* слегка зеленый фон */
-  margin-left: auto;
-  text-align: left; /* или right - по вкусу */
-}
+// .myMessage {
+//   background-color: #d2f8d2;
+//   align-self: flex-end;
+//   text-align: left;
+//   display: block; /* Убираем inline-block, чтобы блоки шли один за другим */
+//   float: none; /* Убираем float */
+//   width: fit-content; /* или max-width: 60% для ограниченной ширины */
+// }
 
-.otherMessage {
-  background-color: #f2f2f2; /* чуть серый фон для чужих сообщений */
-  margin-right: auto;
-  text-align: left;
-}
+// .otherMessage {
+//   background-color: #f2f2f2; /* чуть серый фон для чужих сообщений */
+//   margin-right: auto;
+//   text-align: left;
+// }
 
 .messageText {
   white-space: pre-wrap;
@@ -147,30 +157,38 @@
 }
 
 
+.messageItem {
+  display: block;
+  padding: 10px 14px;
+  margin: 8px 0;
+  border-radius: 10px;
+  max-width: 60%;
+  width: fit-content; /* Автоматическая ширина по содержимому */
+  word-wrap: break-word; /* Перенос длинных слов */
+  position: relative;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.myMessage {
+  background-color: #d2f8d2; /* Зеленый фон */
+  align-self: flex-end; /* Выравнивание по правому краю */
+  text-align: left;
+  margin-left: auto; /* Добавляем отступ, чтобы сообщение прижималось вправо */
+}
+
+.otherMessage {
+  background-color: #f2f2f2; /* Серый фон */
+  align-self: flex-start; /* Выравнивание по левому краю */
+  text-align: left;
+}
+
 .messagesContainer {
   display: flex;
   flex-direction: column;
+  align-items: stretch; /* Убираем возможные выравнивания */
   padding: 16px;
   overflow-y: auto;
   height: 100%;
 }
 
-.messageItem {
-  display: block;
-  margin: 8px 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  max-width: 60%;
-}
-
-.myMessage {
-  align-self: flex-end;
-  background-color: #d2f8d2;
-  text-align: left; /* или right, по вкусу */
-}
-
-.otherMessage {
-  align-self: flex-start;
-  background-color: #f2f2f2;
-  text-align: left;
-}

@@ -9,6 +9,8 @@ type Repository interface {
 	GetAllChatsByLeakedID(user *user.User, leakedId int) ([]Chat, error)
 	UpdateChat(chatID int64, newName string) error
 	DeleteChat(chatID int64) error
+	GetAllUserIDsInChat(chatID int64) ([]int64, error)
+	GetChatByUserID(user *user.User) (*Chat, error)
 
 	GetAllMessagesByChat(chatID int64) ([]Message, error)
 	CreateMessage(chatID, senderID int64, content string) (int64, error)

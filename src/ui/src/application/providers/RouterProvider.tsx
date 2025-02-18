@@ -8,12 +8,12 @@ import { NewsList } from '@/pages/GhostPages/NewsList';
 import { TermsConditions } from '@/pages/GhostPages/TermsConditions';
 import { OrderService } from '@/pages/GhostPages/OrderService';
 import { ContactUs } from '@/pages/GhostPages/ContactUs';
-import Campaing from '@/pages/GhostPages/Campaing/Campaing';
 import AwaitingPublicationPage from '@/pages/GhostPages/AwaitingPublicationPage/AwaitingPublicationPage';
 import LeakedPage from '@/pages/GhostPages/LeakedPage/LeakedPage';
 import { NewsDetail } from '@/pages/GhostPages/NewsDetail';
 import { AwaitingPublicationDetail } from '@/pages/GhostPages/AwaitingPublicationDetail';
 import { LealedDetail } from '@/pages/GhostPages/LealedDetail';
+import Campaign from '@/pages/GhostPages/Campaign/Campaign';
 
 export const router = createBrowserRouter([
   // ПУБЛИЧНАЯ ГЛАВНАЯ (пример)
@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
       { path: 'terms-and-conditions', element: <TermsConditions /> },
       { path: 'order-service', element: <OrderService /> },
       { path: 'contact', element: <ContactUs /> },
-      { path: 'campaing', element: <Campaing /> },
+      { path: 'campaing', element: <Campaign /> },
       { path: 'leaked-data', element: <LeakedPage /> },
       { path: 'leaked-data/:id', element: <LealedDetail /> },
       { path: 'awaiting-publication', element: <AwaitingPublicationPage /> },

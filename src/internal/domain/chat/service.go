@@ -6,9 +6,11 @@ type Service interface {
 	CreateChat(name string, owner_id, leaked_id int) (int64, error)
 	GetChatByID(chatID int64) (*Chat, error)
 	GetAllChatsByLeakedID(user *user.User, leakedId int) ([]Chat, error)
+	GetChatByUserID(user *user.User) (*Chat, error)
 	GetAllChats(user *user.User) ([]Chat, error)
 	UpdateChat(chatID int64, newName string) error
 	DeleteChat(chatID int64) error
+	GetAllUserIDsInChat(chatID int64) ([]int64, error)
 
 	GetAllMessagesByChat(chatID int64) ([]Message, error)
 	CreateMessage(chatID, senderID int64, content string) (int64, error)
@@ -67,4 +69,12 @@ func (s *service) DeleteChat(chatID int64) error {
 
 func (s *service) UpdateUnReadMsg(chatID, userID int) error {
 	return s.repo.UpdateUnReadMsg(chatID, userID)
+}
+
+func (s *service) GetAllUserIDsInChat(chatID int64) ([]int64, error) {
+	return s.repo.GetAllUserIDsInChat(chatID)
+}
+
+func (s *service) GetChatByUserID(user *user.User) (*Chat, error) {
+	return s.repo.GetChatByUserID(user)
 }

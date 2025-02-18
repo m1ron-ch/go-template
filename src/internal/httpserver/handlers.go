@@ -102,6 +102,7 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/chats/{id}", h.DeleteChat).Methods(http.MethodDelete)
 
 	private.HandleFunc("/chats_user/{id}", h.GetAllChatsByLeakedID).Methods(http.MethodGet)
+	private.HandleFunc("/chats/u/v1", h.GetChatByUserID).Methods(http.MethodGet)
 
 	api.HandleFunc("/chats/{id}/messages", h.GetAllMessagesByChat).Methods(http.MethodGet)
 	api.HandleFunc("/messages", h.CreateMessage).Methods(http.MethodPost)
@@ -123,6 +124,7 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/leaked-not-accepted", h.GetCountNotAccepted).Methods(http.MethodGet)
 
 	private.HandleFunc("/upload", h.UploadMediaHandle).Methods(http.MethodPost)
+	private.HandleFunc("/media/delete", h.DeleteMediaHandle).Methods(http.MethodDelete)
 
 	private.HandleFunc("/generate_archive", h.GenerateCompanyArchive).Methods(http.MethodPost)
 
@@ -131,18 +133,16 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/leakeds/{id}/accept", h.LeakedAccepted).Methods(http.MethodPut)
 	private.HandleFunc("/leakeds/{id}/reject", h.LeakedReject).Methods(http.MethodPut)
 
+	router.HandleFunc("/ws/user", h.userWebSocket).Methods(http.MethodGet)
 	router.HandleFunc("/ws/chat", h.chatWebSocket).Methods(http.MethodGet)
 
-	uiPath := filepath.Join(basePath, "src", "ui")
+	uiPath := filepath.Join(basePath, "mnt", "web", "ui")
 	assetsPath := filepath.Join(uiPath, "dist", "assets")
 
 	assetsDir := http.Dir(assetsPath)
 	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(assetsDir)))
 
 	// router.Handle("/metrics", promhttp.Handler())
-
-	fmt.Println(filepath.Join(uiPath, "dist", "assets"))
-	fmt.Println(filepath.Join(uiPath, "index.html"))
 
 	router.PathPrefix("/").
 		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -157,6 +157,48 @@ func (h *Handler) InitRoutes() *mux.Router {
 }
 
 type Connection = manager.Connection
+
+func (h *Handler) userWebSocket(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("user websocket")
+
+	userIDStr := r.URL.Query().Get("user_id")
+	if userIDStr == "" {
+		log.Println("user_id required")
+		http.Error(w, "user_id required", http.StatusBadRequest)
+		return
+	}
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		log.Println("invalid user_id")
+		http.Error(w, "invalid user_id", http.StatusBadRequest)
+		return
+	}
+
+	wsConn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("upgrade error:", err)
+		return
+	}
+
+	// Создаём Connection, где ChatID = -1 (или 0),
+	// чтобы отметить, что это "глобальный" коннект пользователя
+	conn := &manager.Connection{
+		Ws:     wsConn,
+		Send:   make(chan []byte, 256),
+		UserID: userID,
+		ChatID: -1, // или 0, если хотите
+	}
+
+	// Зарегистрируем этот "глобальный" коннект в менеджере
+	h.ChatManager.RegisterGlobal <- conn
+
+	// Запускаем горутину на запись (send)
+	go writePump(conn)
+	// И читаем входящие сообщения (если они вам нужны)
+	// можно использовать ту же readPump, если логика одинаковая,
+	// или завести отдельный readPumpUser(...)
+	readPump(h, conn)
+}
 
 func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("chat websocket")
@@ -175,7 +217,7 @@ func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userIDStr := r.URL.Query().Get("user_id")
-	if chatIDStr == "" {
+	if userIDStr == "" {
 		log.Println("user_id required")
 		http.Error(w, "user_id required", http.StatusBadRequest)
 		return
@@ -187,14 +229,34 @@ func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.chatService.UpdateUnReadMsg(int(chatID), int(userID))
-	fmt.Println(fmt.Sprintf("chat id %d", chatID))
-	fmt.Println(fmt.Sprintf("user id %d", userID))
-
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("upgrade error:", err)
 		return
+	}
+
+	h.chatService.UpdateUnReadMsg(int(chatID), int(userID))
+	out := OutgoingMessage{
+		Action:   "read_messages",
+		ChatID:   chatID,
+		SenderID: userID,
+		// Можно при желании добавить список ID сообщений, которые стали прочитанными
+	}
+	data, _ := json.Marshal(out)
+
+	// 1) всем, кто в чате
+	h.ChatManager.Broadcast <- manager.BroadcastMessage{
+		ChatID: chatID,
+		Data:   data,
+	}
+
+	// 2) глобальный broadcast: всем участникам чата
+	userIDs, _ := h.chatService.GetAllUserIDsInChat(chatID)
+	for _, uID := range userIDs {
+		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
+			UserID: int64(uID),
+			Data:   data,
+		}
 	}
 
 	conn := &Connection{
@@ -220,7 +282,8 @@ func (h *Handler) createMessage(c *Connection, content string) {
 
 	user, err := h.userService.GetUserByID(c.UserID)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err)
+		return
 	}
 
 	out := OutgoingMessage{
@@ -233,9 +296,25 @@ func (h *Handler) createMessage(c *Connection, content string) {
 		RoleID:    user.RoleID,
 	}
 	data, _ := json.Marshal(out)
+
+	// 1) Шлём всем, кто сейчас «сидит» в этом чате
 	h.ChatManager.Broadcast <- manager.BroadcastMessage{
 		ChatID: c.ChatID,
 		Data:   data,
+	}
+
+	// 2) Шлём всем участникам чата на их "глобальные" сокеты:
+	userIDs, err := h.chatService.GetAllUserIDsInChat(c.ChatID)
+	if err != nil {
+		log.Println("error retrieving chat participants:", err)
+		return
+	}
+	for _, uID := range userIDs {
+		// Шлём глобальное сообщение "create" каждому участнику чата:
+		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
+			UserID: int64(uID),
+			Data:   data,
+		}
 	}
 }
 

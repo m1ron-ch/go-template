@@ -3,7 +3,7 @@ import { List, Avatar, Typography, message, Spin } from 'antd'
 import s from './NewsList.module.scss'
 import { AppSettings } from '@/shared'
 
-const { Text } = Typography
+const { Text, Paragraph } = Typography
 
 interface NewsItem {
   id: number
@@ -22,6 +22,7 @@ interface NewsItem {
   }
   image: string
   description: string
+  preview: string
 }
 
 export const NewsList: React.FC = () => {
@@ -61,52 +62,55 @@ export const NewsList: React.FC = () => {
           className={s.newsList}
           itemLayout="vertical"
           dataSource={newsList}
-          renderItem={(item) => {
-            return (
-              <List.Item
-                key={item.id}
-                extra={
-                  <div className={s.imgWrapper}>
-                    <img
-                      src={item.image}
-                      alt="news"
-                      className={s.newsImage}
-                    />
+          renderItem={(item) => (
+            <List.Item
+              key={item.id}
+              extra={
+                <div className={s.imgWrapper}>
+                  <img
+                    src={item.image}
+                    alt="news"
+                    className={s.newsImage}
+                  />
+                </div>
+              }
+            >
+              <List.Item.Meta
+                title={
+                  <a href={`/news/${item.id}`} className={s.newsTitle}>
+                    {item.title}
+                  </a>
+                }
+                description={
+                  <div className={s.metaRow}>
+                    <div className={s.author}>
+                      <Avatar
+                        style={{ backgroundColor: '#87d068', marginRight: 8 }}
+                        size="small"
+                      >
+                        {item.user?.name?.[0]?.toUpperCase() || 'U'}
+                      </Avatar>
+                      <Text>{item.user?.name}</Text>
+                    </div>
+                    {(item.date || item.time) && (
+                      <Text className={s.dateTime}>
+                        {item.date} &nbsp; {item.time}
+                      </Text>
+                    )}
                   </div>
                 }
-              >
-                <List.Item.Meta
-                  title={
-                    <a href={`/news/${item.id}`} className={s.newsTitle}>
-                      {item.title}
-                    </a>
-                  }
-                  description={
-                    <div className={s.metaRow}>
-                      <div className={s.author}>
-                        <Avatar
-                          style={{ backgroundColor: '#87d068', marginRight: 8 }}
-                          size="small"
-                        >
-                          {item.user?.name?.[0]?.toUpperCase() || 'U'}
-                        </Avatar>
-                        <Text>{item.user?.name}</Text>
-                      </div>
-                      {/* Отображаем дату/время, если есть */}
-                      {(item.date || item.time) && (
-                        <Text className={s.dateTime}>
-                          {item.date} &nbsp; {item.time}
-                        </Text>
-                      )}
-                    </div>
-                  }
-                />
-                <div className={s.description}>
-                  {item.description}
-                </div>
-              </List.Item>
-            )
-          }}
+              />
+              {/* Красивое отображение короткого описания */}
+              {item.preview && (
+                <Paragraph
+                  ellipsis={{ rows: 2, expandable: false }}
+                  className={s.preview}
+                >
+                  {item.preview}
+                </Paragraph>
+              )}
+            </List.Item>
+          )}
         />
       )}
     </div>

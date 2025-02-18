@@ -80,7 +80,7 @@ export const MediaLibrary: React.FC = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ filename }),
+        body: JSON.stringify({ filename: filename }),
       });
 
       if (!response.ok) {

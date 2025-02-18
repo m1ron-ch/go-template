@@ -111,6 +111,52 @@ func (h *Handler) GetAllChatsByLeakedID(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(chat)
 }
 
+func (h *Handler) GetChatByUserID(w http.ResponseWriter, r *http.Request) {
+	h.SetCORSHeaders(w, http.MethodGet)
+
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		http.Error(w, "No token cookie", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := cookie.Value
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(h.config.JWTSecret), nil
+	})
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid claims", http.StatusUnauthorized)
+		return
+	}
+
+	userFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		http.Error(w, "Invalid user_id in token", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.userService.GetUserByID(int64(userFloat))
+	if err != nil {
+		http.Error(w, "Error fetching user "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	chat, err := h.chatService.GetChatByUserID(user)
+	if err != nil {
+		http.Error(w, "Chat not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(chat)
+}
+
 // GetChatByID - Получение чата по ID
 func (h *Handler) GetChatByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

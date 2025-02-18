@@ -1,7 +1,7 @@
 -- --------------------------------------------------------
 -- Хост:                         127.0.0.1
--- Версия сервера:               8.0.40 - MySQL Community Server - GPL
--- Операционная система:         Win64
+-- Версия сервера:               8.0.41 - MySQL Community Server - GPL
+-- Операционная система:         Linux
 -- HeidiSQL Версия:              12.8.0.6908
 -- --------------------------------------------------------
 
@@ -15,11 +15,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- Дамп структуры базы данных blog_electronchik
+-- Дамп структуры базы данных blog
 CREATE DATABASE IF NOT EXISTS `blog` /*!40100 DEFAULT CHARACTER SET latin1 */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `blog`;
 
--- Дамп структуры для таблица blog_electronchik.chats
+-- Дамп структуры для таблица blog.chats
 CREATE TABLE IF NOT EXISTS `chats` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` text NOT NULL,
@@ -27,25 +27,26 @@ CREATE TABLE IF NOT EXISTS `chats` (
   `owner_id` int DEFAULT NULL,
   `leaked_id` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.chats: ~0 rows (приблизительно)
+-- Дамп данных таблицы blog.chats: ~4 rows (приблизительно)
 DELETE FROM `chats`;
 INSERT INTO `chats` (`id`, `name`, `created_at`, `owner_id`, `leaked_id`) VALUES
-	(5, 'miron host', '2025-02-12 21:46:38', 41, 36);
+	(8, 'test_user1', '2025-02-17 12:36:37', 41, NULL),
+	(9, 'Apache Kafka', '2025-02-17 13:22:45', 41, 39);
 
--- Дамп структуры для таблица blog_electronchik.contact_us
+-- Дамп структуры для таблица blog.contact_us
 CREATE TABLE IF NOT EXISTS `contact_us` (
   `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.contact_us: ~1 rows (приблизительно)
+-- Дамп данных таблицы blog.contact_us: ~1 rows (приблизительно)
 DELETE FROM `contact_us`;
 INSERT INTO `contact_us` (`content`, `json`) VALUES
 	('<div class="page-text-wrapper">\n              <p style="text-align: center;">Contact Us 1</p>\n<p><img style="display: block; margin-left: auto; margin-right: auto;" src="../static/media/Screenshot 2023-10-11 211100_1738977321.png" alt="My description" width="254" height="206"></p>\n            </div>', '{"time":1739343626231,"blocks":[{"id":"bcJcr8cVB9","type":"p","data":{"text":"<p style=\\"text-align: center;\\">Contact Us 1</p>\\n<p><img style=\\"display: block; margin-left: auto; margin-right: auto;\\" src=\\"../static/media/Screenshot 2023-10-11 211100_1738977321.png\\" alt=\\"My description\\" width=\\"254\\" height=\\"206\\"></p>"}}],"version":"2.30.1"}');
 
--- Дамп структуры для таблица blog_electronchik.leaked
+-- Дамп структуры для таблица blog.leaked
 CREATE TABLE IF NOT EXISTS `leaked` (
   `id` int NOT NULL AUTO_INCREMENT,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -63,15 +64,18 @@ CREATE TABLE IF NOT EXISTS `leaked` (
   `publish` tinyint DEFAULT '0',
   `is_accept` tinyint DEFAULT '2' COMMENT '-1 - отклонено, 0 - ожидание, 1 - принято, 2 - draft',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.leaked: ~2 rows (приблизительно)
+-- Дамп данных таблицы blog.leaked: ~5 rows (приблизительно)
 DELETE FROM `leaked`;
 INSERT INTO `leaked` (`id`, `created_at`, `payout`, `payout_unit`, `company_name`, `website`, `logo_url`, `blog`, `description`, `user_id`, `expires`, `status`, `builder`, `publish`, `is_accept`) VALUES
-	(34, '2025-02-12 08:24:18', 101, 0, 'localhost', 'http://localhost:3000/', '/static/media/Screenshot 2023-03-01 155647_1739348655.png', 'blog', 'description', 5, '2025-03-17 09:54:50', 1, 0, 1, 2),
-	(36, '2025-02-12 21:46:38', 99, 0, 'miron host', 'host.by', '/static/media/Screenshot 2023-03-01 155647_1739427766.png', 'blog', 'des', 41, NULL, 1, 1, 1, 1);
+	(34, '2025-02-12 08:24:18', 101, 0, 'localhost', 'http://localhost:3000/', '/static/media/Screenshot 2023-03-01 155647_1739348655.png', 'blog', 'description', 5, '2025-03-17 09:54:50', 1, 0, 0, 2),
+	(36, '2025-02-12 21:46:38', 99, 0, 'miron host', 'host.by', '/static/media/Screenshot 2023-03-01 155647_1739427766.png', 'blog', 'des', 41, NULL, 1, 1, 1, 1),
+	(38, '2025-02-17 11:07:18', 199, 0, 'Apache Kafka', 'http://192.168.151.80:8080/', '/static/media/Без имени_1739790409.png', 'What is Kafka used for? Kafka is used to build real-time streaming data pipelines and real-time streaming applications. A data pipeline reliably processes and moves data from one system to another, and a streaming application is an application that consumes streams of data.', 'Apache Kafka is an open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications. ', 5, NULL, 1, 0, 1, 2),
+	(39, '2025-02-17 13:22:45', 25, 0, 'Apache Kafka', 'https://www.kafka.com', '/static/media/Без имени1_1739798645.png', 'kekkekekkeee3 232 323 ', 'kkkkkkk 11 123 3', 41, '2025-02-18 21:00:00', 1, 0, 0, 2),
+	(40, '2025-02-18 14:12:06', 111111, 0, 'test.com', 'test.com', '/static/media/download_1739888372.png', '', '', 5, NULL, 0, 0, 0, 2);
 
--- Дамп структуры для таблица blog_electronchik.leaked_screenshots
+-- Дамп структуры для таблица blog.leaked_screenshots
 CREATE TABLE IF NOT EXISTS `leaked_screenshots` (
   `id` int NOT NULL AUTO_INCREMENT,
   `leaked_id` int NOT NULL,
@@ -79,17 +83,25 @@ CREATE TABLE IF NOT EXISTS `leaked_screenshots` (
   PRIMARY KEY (`id`),
   KEY `fk_leaked` (`leaked_id`),
   CONSTRAINT `fk_leaked` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=186 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=297 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.leaked_screenshots: ~4 rows (приблизительно)
+-- Дамп данных таблицы blog.leaked_screenshots: ~12 rows (приблизительно)
 DELETE FROM `leaked_screenshots`;
 INSERT INTO `leaked_screenshots` (`id`, `leaked_id`, `screenshot_url`) VALUES
-	(182, 34, '/static/media/Screenshot 2023-03-19 155502_1739348902.png'),
-	(183, 34, '/static/media/Screenshot 2023-03-12 140951_1739348902.png'),
-	(184, 34, '/static/media/Screenshot 2023-03-19 153226_1739348902.png'),
-	(185, 36, '/static/media/Screenshot 2023-03-01 155647_1739428706.png');
+	(185, 36, '/static/media/Screenshot 2023-03-01 155647_1739428706.png'),
+	(254, 38, '/static/media/Без имени2_1739790435.png'),
+	(255, 38, '/static/media/Без имени_1739790435.png'),
+	(256, 38, '/static/media/Без имени1_1739790435.png'),
+	(257, 38, '/static/media/Без имени3_1739790435.jpg'),
+	(290, 39, '/static/media/Без имени3_1739798662.jpg'),
+	(291, 39, '/static/media/Без имени_1739798662.png'),
+	(292, 39, '/static/media/Без имени2_1739798662.png'),
+	(293, 39, '/static/media/Без имени1_1739798662.png'),
+	(294, 34, '/static/media/Screenshot 2023-03-19 155502_1739348902.png'),
+	(295, 34, '/static/media/Screenshot 2023-03-19 153226_1739348902.png'),
+	(296, 34, '/static/media/Screenshot 2023-03-12 140951_1739348902.png');
 
--- Дамп структуры для таблица blog_electronchik.leaked_urls
+-- Дамп структуры для таблица blog.leaked_urls
 CREATE TABLE IF NOT EXISTS `leaked_urls` (
   `id` int NOT NULL AUTO_INCREMENT,
   `leaked_id` int NOT NULL DEFAULT '0',
@@ -97,16 +109,19 @@ CREATE TABLE IF NOT EXISTS `leaked_urls` (
   PRIMARY KEY (`id`),
   KEY `FK_leaked_links_leaked` (`leaked_id`),
   CONSTRAINT `FK_leaked_links_leaked` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=146 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.leaked_urls: ~3 rows (приблизительно)
+-- Дамп данных таблицы blog.leaked_urls: ~6 rows (приблизительно)
 DELETE FROM `leaked_urls`;
 INSERT INTO `leaked_urls` (`id`, `leaked_id`, `url`) VALUES
-	(97, 34, 'http://localhost:3000/admin/news'),
-	(98, 34, 'http://localhost:3000/admin/news'),
-	(99, 36, 'http://localhost:3000/admin/media');
+	(99, 36, 'http://localhost:3000/admin/media'),
+	(133, 38, 'https://www.confluent.io/what-is-apache-kafka/'),
+	(134, 38, 'https://kafka.apache.org/'),
+	(143, 39, 'https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://aws.amazon.com/what-is/apache-kafka/&ved=2ahUKEwih8cLU5sqLAxXaFVkFHceHDcgQFnoECFAQAQ&usg=AOvVaw0ebUo9jssAiQ7iTUyPUBvs'),
+	(144, 34, 'http://localhost:3000/admin/news'),
+	(145, 34, 'http://localhost:3000/admin/news');
 
--- Дамп структуры для таблица blog_electronchik.logs
+-- Дамп структуры для таблица blog.logs
 CREATE TABLE IF NOT EXISTS `logs` (
   `uid` int unsigned NOT NULL AUTO_INCREMENT,
   `timestamp` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -122,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `logs` (
   UNIQUE KEY `uid_UNIQUE` (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8311 DEFAULT CHARSET=utf8mb3;
 
--- Дамп данных таблицы blog_electronchik.logs: ~234 rows (приблизительно)
+-- Дамп данных таблицы blog.logs: ~238 rows (приблизительно)
 DELETE FROM `logs`;
 INSERT INTO `logs` (`uid`, `timestamp`, `log_level_id`, `user_id`, `short_message`, `full_message`, `event_type_id`, `ipv4`, `is_successful`, `module`) VALUES
 	(8073, '2024-10-14 12:39:06', 1, 0, 'Запуск сервера', 'Сервер прослушивает 192.168.9.2', 1, '192.168.9.2/24, fe80::be24:11ff:fefa:8abd/64', 1, NULL),
@@ -364,7 +379,7 @@ INSERT INTO `logs` (`uid`, `timestamp`, `log_level_id`, `user_id`, `short_messag
 	(8309, '2024-12-01 16:31:51', 1, 3, 'Редактирование страницы', 'Редактирование страницы: page_id=80, старые данные: url_id=%!d(bool=true), is_visibility=%!v(MISSING)', 20, '127.0.0.1', 1, NULL),
 	(8310, '2024-12-01 16:31:52', 1, 3, 'Страница успешно обновлена', 'Страница успешно обновлена: page_id=149, новые данные: url_id=80, is_visibility=true, update_at=2024-12-01 13:31:51', 20, '127.0.0.1', 1, NULL);
 
--- Дамп структуры для таблица blog_electronchik.log_event_type
+-- Дамп структуры для таблица blog.log_event_type
 CREATE TABLE IF NOT EXISTS `log_event_type` (
   `uid` int unsigned NOT NULL AUTO_INCREMENT,
   `name` text NOT NULL,
@@ -372,7 +387,7 @@ CREATE TABLE IF NOT EXISTS `log_event_type` (
   UNIQUE KEY `uid_UNIQUE` (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb3;
 
--- Дамп данных таблицы blog_electronchik.log_event_type: ~28 rows (приблизительно)
+-- Дамп данных таблицы blog.log_event_type: ~28 rows (приблизительно)
 DELETE FROM `log_event_type`;
 INSERT INTO `log_event_type` (`uid`, `name`) VALUES
 	(1, 'Сервер'),
@@ -404,7 +419,7 @@ INSERT INTO `log_event_type` (`uid`, `name`) VALUES
 	(27, 'Куки'),
 	(28, 'Отправка сообщение по почте');
 
--- Дамп структуры для таблица blog_electronchik.log_level
+-- Дамп структуры для таблица blog.log_level
 CREATE TABLE IF NOT EXISTS `log_level` (
   `uid` int NOT NULL AUTO_INCREMENT,
   `name` varchar(45) NOT NULL,
@@ -412,7 +427,7 @@ CREATE TABLE IF NOT EXISTS `log_level` (
   UNIQUE KEY `level_name_UNIQUE` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.log_level: ~4 rows (приблизительно)
+-- Дамп данных таблицы blog.log_level: ~4 rows (приблизительно)
 DELETE FROM `log_level`;
 INSERT INTO `log_level` (`uid`, `name`) VALUES
 	(4, 'DEBUG'),
@@ -420,7 +435,7 @@ INSERT INTO `log_level` (`uid`, `name`) VALUES
 	(1, 'INFO'),
 	(2, 'WARNING');
 
--- Дамп структуры для таблица blog_electronchik.messages
+-- Дамп структуры для таблица blog.messages
 CREATE TABLE IF NOT EXISTS `messages` (
   `id` int NOT NULL AUTO_INCREMENT,
   `chat_id` int NOT NULL,
@@ -433,21 +448,34 @@ CREATE TABLE IF NOT EXISTS `messages` (
   PRIMARY KEY (`id`),
   KEY `chat_id` (`chat_id`),
   CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`chat_id`) REFERENCES `chats` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.messages: ~8 rows (приблизительно)
+-- Дамп данных таблицы blog.messages: ~15 rows (приблизительно)
 DELETE FROM `messages`;
 INSERT INTO `messages` (`id`, `chat_id`, `sender_id`, `content`, `is_read`, `created_at`, `updated_at`, `is_deleted`) VALUES
-	(4, 5, 4, 'HI!!!!', 0, '2025-02-13 14:33:47', NULL, 0),
-	(5, 5, 41, 'hiiiii!', 0, '2025-02-13 14:40:06', NULL, 0),
-	(7, 5, 4, 'ddd', 0, '2025-02-13 18:19:25', NULL, 0),
-	(8, 5, 4, '111', 0, '2025-02-13 18:21:27', NULL, 0),
-	(9, 5, 41, '32313', 0, '2025-02-13 18:35:00', NULL, 0),
-	(10, 5, 4, '333', 0, '2025-02-13 18:35:04', NULL, 0),
-	(11, 5, 41, 'hhh', 0, '2025-02-13 18:39:32', NULL, 0),
-	(12, 5, 41, 'b', 0, '2025-02-13 18:39:34', NULL, 0);
+	(13, 8, 5, 'dasdasd', 1, '2025-02-17 13:04:44', NULL, 0),
+	(16, 9, 41, 'heelllllo', 1, '2025-02-17 13:24:37', NULL, 0),
+	(17, 9, 5, 'hhhii', 1, '2025-02-17 13:25:20', NULL, 0),
+	(18, 9, 5, '!!!!(рурурру)111', 1, '2025-02-17 13:25:33', '2025-02-17 13:54:53', 1),
+	(19, 9, 5, 'ммммммм', 1, '2025-02-17 14:06:53', NULL, 0),
+	(20, 9, 5, 'прпр', 1, '2025-02-18 06:39:28', NULL, 0),
+	(21, 9, 5, '123', 1, '2025-02-18 06:52:32', NULL, 0),
+	(22, 9, 5, 'delete noooo', 1, '2025-02-18 07:56:24', '2025-02-18 07:56:41', 1),
+	(23, 9, 41, 'hiii', 1, '2025-02-18 08:04:55', NULL, 0),
+	(24, 9, 41, 'hhhhh', 1, '2025-02-18 08:05:48', NULL, 0),
+	(25, 9, 5, 'вввв', 1, '2025-02-18 08:20:40', NULL, 0),
+	(26, 9, 41, '123', 1, '2025-02-18 08:21:03', NULL, 0),
+	(27, 9, 41, 'аваыва', 1, '2025-02-18 08:21:06', NULL, 0),
+	(28, 9, 5, '11', 1, '2025-02-18 08:21:19', NULL, 0),
+	(29, 9, 41, 'tewtwet', 1, '2025-02-18 08:33:57', NULL, 0),
+	(30, 9, 41, 'dasda', 1, '2025-02-18 08:51:50', NULL, 0),
+	(31, 9, 41, 'asd', 1, '2025-02-18 08:52:07', NULL, 0),
+	(32, 9, 5, 'hiiiiii', 1, '2025-02-18 08:54:14', '2025-02-18 08:54:43', 1),
+	(33, 9, 5, 'dddd', 1, '2025-02-18 08:54:18', '2025-02-18 08:54:42', 1),
+	(34, 9, 41, '13123', 1, '2025-02-18 08:54:20', NULL, 0),
+	(35, 8, 5, 'helllllooooow', 0, '2025-02-18 12:59:14', NULL, 0);
 
--- Дамп структуры для таблица blog_electronchik.news
+-- Дамп структуры для таблица blog.news
 CREATE TABLE IF NOT EXISTS `news` (
   `uid` int unsigned NOT NULL AUTO_INCREMENT,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -460,39 +488,41 @@ CREATE TABLE IF NOT EXISTS `news` (
   `content` longtext,
   `json` longtext,
   PRIMARY KEY (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb3;
 
--- Дамп данных таблицы blog_electronchik.news: ~4 rows (приблизительно)
+-- Дамп данных таблицы blog.news: ~5 rows (приблизительно)
 DELETE FROM `news`;
 INSERT INTO `news` (`uid`, `created_at`, `update_at`, `is_visibility`, `user_id`, `image`, `title`, `preview`, `content`, `json`) VALUES
 	(33, '2023-05-23 06:27:38', '2025-02-02 14:04:39', 1, 4, 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg', 'Largest US addiction treatment provider notifies patients of data breach', 'BayMark Health Services... personal and health information in a September 2024 breach.', 'BayMark Health Services... personal and health information in a September 2024 breach.', ''),
 	(34, '2024-05-15 13:26:03', '2025-02-02 14:04:40', 1, 4, 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg', 'Bologna FC confirms data breach after RansomHub ransomware attack', 'Bologna Football Club 1909 has confirmed it suffered a ransomware attack...', 'Bologna Football Club 1909 has confirmed it suffered a ransomware attack...', ''),
 	(36, '2024-08-27 13:26:03', '2025-02-02 14:04:41', 1, 4, 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg', 'New Ymir ransomware partners with RustyStealer in attacks', 'A new ransomware family called \'Ymir\' has been spotted in the wild...', 'A new ransomware family called \'Ymir\' has been spotted in the wild...', ''),
-	(61, '2025-02-03 18:32:28', '2025-02-13 16:48:29', 0, 4, '/static/media/Screenshot 2023-03-13 174422_1739345519.png', 'dsadsсс', 'aadaddasыывв', '<p style="text-align:left;">adsaddad222</p><p style="text-align:left;">1111113333</p>', '{"time":1739454509882,"blocks":[{"id":"McYP-RlqgL","type":"paragraph","data":{"text":"adsaddad222","alignment":"left"}},{"id":"RoRh4eWOly","type":"paragraph","data":{"text":"1111113333","alignment":"left"}}],"version":"2.30.1"}');
+	(61, '2025-02-03 18:32:28', '2025-02-13 16:48:29', 0, 4, '/static/media/Screenshot 2023-03-13 174422_1739345519.png', 'dsadsсс', 'aadaddasыывв', '<p style="text-align:left;">adsaddad222</p><p style="text-align:left;">1111113333</p>', '{"time":1739454509882,"blocks":[{"id":"McYP-RlqgL","type":"paragraph","data":{"text":"adsaddad222","alignment":"left"}},{"id":"RoRh4eWOly","type":"paragraph","data":{"text":"1111113333","alignment":"left"}}],"version":"2.30.1"}'),
+	(62, '2025-02-17 13:10:12', '2025-02-17 13:10:12', 1, 5, '/static/media/Без имени2_1739797704.png', 'Last Test News', 'dadasd asd asd asd asd', '<div class="page-text-wrapper">\n              undefined\n            </div><ol><li>sdasd</li><li>d</li><li>asd</li><li>ads</li></ol><blockquote>eqweqwe</blockquote> - weqweqeError: [31m The Parser function of type "table" is not defined. \n\n  Define your custom parser functions as: [34mhttps://github.com/pavittarx/editorjs-html#extend-for-custom-blocks [0mError: [31m The Parser function of type "checklist" is not defined. \n\n  Define your custom parser functions as: [34mhttps://github.com/pavittarx/editorjs-html#extend-for-custom-blocks [0m<br/>Error: [31m The Parser function of type "warning" is not defined. \n\n  Define your custom parser functions as: [34mhttps://github.com/pavittarx/editorjs-html#extend-for-custom-blocks [0mError: [31m The Parser function of type "raw" is not defined. \n\n  Define your custom parser functions as: [34mhttps://github.com/pavittarx/editorjs-html#extend-for-custom-blocks [0m', '{"time":1739797812179,"blocks":[{"id":"35zpnXd5oi","type":"p","data":{}},{"id":"DKuT4VGKwg","type":"list","data":{"style":"ordered","items":["sdasd","d","asd","ads"]}},{"id":"q_Bv8Vpvjp","type":"quote","data":{"text":"eqweqwe","caption":"weqweqe","alignment":"left"}},{"id":"nqwtHBl6eI","type":"table","data":{"withHeadings":false,"content":[["rqwrqwr","wrqwrqwr","wqrqwr"],["wrqw","rqwrqwrqwr","qwrqwr"]]}},{"id":"oEZ9wARbhC","type":"checklist","data":{"items":[{"text":"rqwrqwrq","checked":true}]}},{"id":"ogmIfhi3fU","type":"delimiter","data":{}},{"id":"KiS4gXnYbz","type":"warning","data":{"title":"qwe","message":"qweqweq"}},{"id":"-tQbbWQiHx","type":"raw","data":{"html":"import React, { useState, useEffect, useMemo } from \'react\';\\nimport { Table, Button, Spin, message, Input, Space } from \'antd\';\\nimport { ReloadOutlined, LoadingOutlined, SearchOutlined, DownloadOutlined } from \'@ant-design/icons\';\\nimport Highlighter from \'react-highlight-words\';\\nimport moment from \'moment\';\\nimport { AppSettings } from \'@/shared\';\\n\\ninterface User {\\n  id: number;\\n  name: string;\\n  login: string;\\n  role_id: number;\\n  status_id: number;\\n  password: string;\\n}\\n\\ninterface Leaked {\\n  id: number;\\n  status: number;\\n  blog: string;\\n  company_name: string;\\n  description: string;\\n  website: string;\\n  user: User;\\n  logo_url: string;\\n  screenshots: any;\\n  urls: any;\\n  payout: number;\\n  payout_unit: number;\\n  builder: number;\\n  publish: number;\\n  is_accept: number;\\n  created_at: string;\\n  expires: string;\\n}\\n\\ninterface FileRecord {\\n  id: number;\\n  user: User;\\n  leaked: Leaked;\\n  folder_name: string;\\n  archive_number: string;\\n  status: string;\\n  creted_at: string; // Если в JSON опечатка, замените на \\"created_at\\"\\n}\\n\\nexport const FilesPage: React.FC = () => {\\n  const [files, setFiles] = useState<FileRecord[]>([]);\\n  const [isLoading, setIsLoading] = useState<boolean>(true);\\n  const [searchText, setSearchText] = useState<string>(\'\');\\n\\n  useEffect(() => {\\n    fetchFiles();\\n  }, []);\\n\\n  const fetchFiles = async () => {\\n    setIsLoading(true);\\n    try {\\n      const response = await fetch(`${AppSettings.API_URL}/files`, {\\n        credentials: \'include\',\\n      });\\n      if (!response.ok) {\\n        throw new Error(\'Failed to fetch files\');\\n      }\\n      const data: FileRecord[] = await response.json();\\n      setFiles(data);\\n    } catch (error) {\\n      console.error(\'Error fetching files:\', error);\\n      message.error(\'Failed to fetch files\');\\n    } finally {\\n      setIsLoading(false);\\n    }\\n  };\\n\\n  // Фильтруем файлы по глобальному поиску (folder, archive, status, user login, leaked company)\\n  const filteredFiles = useMemo(() => {\\n    if (!searchText) return files;\\n    const lowercasedSearch = searchText.toLowerCase();\\n    return files.filter(file =>\\n      file.folder_name.toLowerCase().includes(lowercasedSearch) ||\\n      file.archive_number.toLowerCase().includes(lowercasedSearch) ||\\n      file.status.toLowerCase().includes(lowercasedSearch) ||\\n      file.user.login.toLowerCase().includes(lowercasedSearch) ||\\n      file.leaked.company_name.toLowerCase().includes(lowercasedSearch)\\n    );\\n  }, [files, searchText]);\\n\\n  // Определяем колонки таблицы с сортировкой и подсветкой найденного текста\\n  const columns = useMemo(\\n    () => [\\n      {\\n        title: \'Folder Name\',\\n        dataIndex: \'folder_name\',\\n        key: \'folder_name\',\\n        sorter: (a: FileRecord, b: FileRecord) =>\\n          a.folder_name.localeCompare(b.folder_name),\\n        render: (text: string) => (\\n          <Highlighter\\n            highlightStyle={{ backgroundColor: \'#ffc069\', padding: 0 }}\\n            searchWords={[searchText]}\\n            autoEscape\\n            textToHighlight={text || \'\'}\\n          />\\n        ),\\n      },\\n      {\\n        title: \'Archive Number\',\\n        dataIndex: \'archive_number\',\\n        key: \'archive_number\',\\n        sorter: (a: FileRecord, b: FileRecord) =>\\n          a.archive_number.localeCompare(b.archive_number),\\n        render: (text: string) => (\\n          <Highlighter\\n            highlightStyle={{ backgroundColor: \'#ffc069\', padding: 0 }}\\n            searchWords={[searchText]}\\n            autoEscape\\n            textToHighlight={text || \'\'}\\n          />\\n        ),\\n      },\\n      {\\n        title: \'Status\',\\n        dataIndex: \'status\',\\n        key: \'status\',\\n        sorter: (a: FileRecord, b: FileRecord) =>\\n          a.status.localeCompare(b.status),\\n        render: (text: string) => (\\n          <Highlighter\\n            highlightStyle={{ backgroundColor: \'#ffc069\', padding: 0 }}\\n            searchWords={[searchText]}\\n            autoEscape\\n            textToHighlight={text || \'\'}\\n          />\\n        ),\\n      },\\n      {\\n        title: \'Created At\',\\n        dataIndex: \'creted_at\',\\n        key: \'creted_at\',\\n        sorter: (a: FileRecord, b: FileRecord) =>\\n          moment.utc(a.creted_at).valueOf() - moment.utc(b.creted_at).valueOf(),\\n        render: (text: string) =>\\n          moment.utc(text).local().format(\'YYYY-MM-DD HH:mm:ss\'),\\n      },\\n      {\\n        title: \'User Login\',\\n        dataIndex: [\'user\', \'login\'],\\n        key: \'user_login\',\\n        sorter: (a: FileRecord, b: FileRecord) =>\\n          a.user.login.localeCompare(b.user.login),\\n        render: (text: string) => (\\n          <Highlighter\\n            highlightStyle={{ backgroundColor: \'#ffc069\', padding: 0 }}\\n            searchWords={[searchText]}\\n            autoEscape\\n            textToHighlight={text || \'\'}\\n          />\\n        ),\\n      },\\n      {\\n        title: \'Leaked Company\',\\n        dataIndex: [\'leaked\', \'company_name\'],\\n        key: \'leaked_company\',\\n        sorter: (a: FileRecord, b: FileRecord) =>\\n          a.leaked.company_name.localeCompare(b.leaked.company_name),\\n        render: (text: string) => (\\n          <Highlighter\\n            highlightStyle={{ backgroundColor: \'#ffc069\', padding: 0 }}\\n            searchWords={[searchText]}\\n            autoEscape\\n            textToHighlight={text || \'\'}\\n          />\\n        ),\\n      },\\n      {\\n        title: \'Download (decryptor)\',\\n        dataIndex: \'download_file\',\\n        key: \'download_file\',\\n        render: (_: any, fileRecord: FileRecord) => (\\n          <div style={{display: \\"flex\\", alignItems: \\"center\\"}}>\\n              <Button\\n                icon={<DownloadOutlined />}\\n                onClick={()=> {}}\\n                style={{ marginRight: 8 }}\\n              >\\n                {fileRecord.folder_name}  \\n              </Button>\\n          </div>\\n        ),\\n      }\\n    ],\\n    [searchText]\\n  );\\n\\n  return (\\n    <div style={{ padding: \'24px\' }}>\\n      <Space style={{ marginBottom: 16 }}>\\n        <Input\\n          placeholder=\\"Search by folder, archive, status, etc.\\"\\n          value={searchText}\\n          onChange={(e) => setSearchText(e.target.value)}\\n          style={{ width: 300 }}\\n          prefix={<SearchOutlined />}\\n          allowClear\\n        />\\n        <Button\\n          type=\\"primary\\"\\n          icon={<ReloadOutlined />}\\n          onClick={fetchFiles}\\n        >\\n          Refresh\\n        </Button>\\n      </Space>\\n\\n      <Table\\n        dataSource={filteredFiles}\\n        columns={columns}\\n        rowKey=\\"id\\"\\n        loading={{\\n          spinning: isLoading,\\n          indicator: <Spin indicator={<LoadingOutlined spin />} size=\\"large\\" />,\\n        }}\\n        pagination={{ pageSize: 10 }}\\n      />\\n    </div>\\n  );\\n};\\n"}}],"version":"2.30.1"}'),
+	(63, '2025-02-18 13:16:17', '2025-02-18 13:17:38', 1, 5, '/static/media/192.168.150.192_51375_45.120.177_1739884535.png', 'Top Social Security official steps down after disagreement with DOGE over sensitive data', 'The top official\'s departure is the latest in a wave of exits of senior officials whose agencies have come into the crosshairs of Elon Musk\'s Department of Government Efficiency. ', '<div class="page-text-wrapper">\n              <p class="body-graf">Michelle King, the top official at the Social Security Administration, left her position this weekend after she refused a request from Elon Musk\'s Department of Government Efficiency to access sensitive government records at the agency, according to two sources familiar with the situation.</p>\n<p class="body-graf">White House spokesperson Harrison Fields confirmed in a statement that King was no longer the head of the agency.</p>\n<div id="taboolaReadMoreBelow"></div>\n<p class="body-graf">&ldquo;President Trump has nominated the highly qualified and talented Frank Bisignano to lead the Social Security Administration, and we expect him to be swiftly confirmed in the coming weeks. In the meantime, the agency will be led by a career Social Security anti-fraud expert as the acting commissioner. President Trump is committed to appointing the best and most qualified individuals who are dedicated to working on behalf of the American people, not to appease the bureaucracy that has failed them for far too long,&rdquo; Fields said.</p>\n            </div>', '{"time":1739884656217,"blocks":[{"id":"PIg6o4jCTD","type":"p","data":{"text":"<p class=\\"body-graf\\">Michelle King, the top official at the Social Security Administration, left her position this weekend after she refused a request from Elon Musk\'s Department of Government Efficiency to access sensitive government records at the agency, according to two sources familiar with the situation.</p>\\n<p class=\\"body-graf\\">White House spokesperson Harrison Fields confirmed in a statement that King was no longer the head of the agency.</p>\\n<div id=\\"taboolaReadMoreBelow\\"></div>\\n<p class=\\"body-graf\\">&ldquo;President Trump has nominated the highly qualified and talented Frank Bisignano to lead the Social Security Administration, and we expect him to be swiftly confirmed in the coming weeks. In the meantime, the agency will be led by a career Social Security anti-fraud expert as the acting commissioner. President Trump is committed to appointing the best and most qualified individuals who are dedicated to working on behalf of the American people, not to appease the bureaucracy that has failed them for far too long,&rdquo; Fields said.</p>"}}],"version":"2.30.1"}');
 
--- Дамп структуры для таблица blog_electronchik.order_service
+-- Дамп структуры для таблица blog.order_service
 CREATE TABLE IF NOT EXISTS `order_service` (
   `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog_electronchik.order_service: ~1 rows (приблизительно)
+-- Дамп данных таблицы blog.order_service: ~1 rows (приблизительно)
 DELETE FROM `order_service`;
 INSERT INTO `order_service` (`content`, `json`) VALUES
 	('<div class="page-text-wrapper">\n              <p>Order a service</p>\n            </div>', '{"time":1738738266357,"blocks":[{"id":"YvQ0v2eQZR","type":"p","data":{"text":"<p>Order a service</p>"}}],"version":"2.30.1"}');
 
--- Дамп структуры для таблица blog_electronchik.terms_and_conditions
+-- Дамп структуры для таблица blog.terms_and_conditions
 CREATE TABLE IF NOT EXISTS `terms_and_conditions` (
   `content` longtext,
   `json` longtext
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.terms_and_conditions: ~1 rows (приблизительно)
+-- Дамп данных таблицы blog.terms_and_conditions: ~1 rows (приблизительно)
 DELETE FROM `terms_and_conditions`;
 INSERT INTO `terms_and_conditions` (`content`, `json`) VALUES
 	('<div class="page-text-wrapper">\n              <p style="text-align: center;">Terms and Conditions</p>\n<p><img style="display: block; margin-left: auto; margin-right: auto;" src="../static/media/Screenshot 2023-09-15 122706_1739345157.png" alt="My description" width="167" height="286"></p>\n            </div>', '{"time":1739349551549,"blocks":[{"id":"1nRlui53wp","type":"p","data":{"text":"<p style=\\"text-align: center;\\">Terms and Conditions</p>\\n<p><img style=\\"display: block; margin-left: auto; margin-right: auto;\\" src=\\"../static/media/Screenshot 2023-09-15 122706_1739345157.png\\" alt=\\"My description\\" width=\\"167\\" height=\\"286\\"></p>"}}],"version":"2.30.1"}');
 
--- Дамп структуры для таблица blog_electronchik.used_folders
+-- Дамп структуры для таблица blog.used_folders
 CREATE TABLE IF NOT EXISTS `used_folders` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
@@ -509,12 +539,12 @@ CREATE TABLE IF NOT EXISTS `used_folders` (
   CONSTRAINT `used_folders_ibfk_2` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
--- Дамп данных таблицы blog_electronchik.used_folders: ~0 rows (приблизительно)
+-- Дамп данных таблицы blog.used_folders: ~0 rows (приблизительно)
 DELETE FROM `used_folders`;
 INSERT INTO `used_folders` (`id`, `user_id`, `leaked_id`, `folder_name`, `archive_number`, `status`, `created_at`) VALUES
 	(1, 41, 36, 'archive_1', '1', 'assigned', '2025-02-13 14:27:25');
 
--- Дамп структуры для таблица blog_electronchik.users
+-- Дамп структуры для таблица blog.users
 CREATE TABLE IF NOT EXISTS `users` (
   `uid` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
@@ -533,12 +563,12 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`uid`),
   UNIQUE KEY `login_UNIQUE` (`login`),
   UNIQUE KEY `token_UNIQUE` (`token`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb3;
 
--- Дамп данных таблицы blog_electronchik.users: ~3 rows (приблизительно)
+-- Дамп данных таблицы blog.users: ~3 rows (приблизительно)
 DELETE FROM `users`;
 INSERT INTO `users` (`uid`, `name`, `login`, `password_hash`, `registration_date`, `status_id`, `role_id`, `last_login`, `ipv4`, `login_attempts`, `token`, `token_creation`, `refresh_token`, `email`) VALUES
-	(4, 'root1', 'root1', '$2a$10$gN.fub8knZfwagApDdZgr..ubB9VAEYgDg072eg0TTBh6vPoZgZca', '2025-01-31 23:31:20', 1, 1, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+	(4, 'root1', 'root1', '$2a$10$gN.fub8knZfwagApDdZgr..ubB9VAEYgDg072eg0TTBh6vPoZgZca', '2025-01-31 23:31:20', 3, 1, NULL, NULL, 0, NULL, NULL, NULL, NULL),
 	(5, 'root', 'root', '$2a$10$gN.fub8knZfwagApDdZgr..ubB9VAEYgDg072eg0TTBh6vPoZgZca', '2025-01-31 23:31:20', 1, 1, NULL, NULL, 0, NULL, NULL, NULL, NULL),
 	(41, 'user_test1', 'user_test1', '$2a$10$I1ZOwu7vVyN8zBP1p4Ajy.3noWeVR8vjhkb2qGJTr3QF0gTQuHFIy', '2025-02-06 14:50:47', 1, 2, NULL, NULL, 0, NULL, NULL, NULL, NULL);
 

@@ -16,6 +16,42 @@ func NewChatRepository(db *sql.DB) chat.Repository {
 	return &ChatRepository{db: db}
 }
 
+func (r *ChatRepository) GetAllUserIDsInChat(chatID int64) ([]int64, error) {
+	query := `
+		SELECT DISTINCT user_id
+		FROM (
+			-- Владелец чата
+			SELECT owner_id AS user_id
+			FROM chats
+			WHERE id = ?
+
+			UNION
+
+			-- Все, кто писал сообщения в чате
+			SELECT sender_id AS user_id
+			FROM messages
+			WHERE chat_id = ?
+		) AS t
+	`
+
+	rows, err := r.db.Query(query, chatID, chatID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var userIDs []int64
+	for rows.Next() {
+		var uid int64
+		if err := rows.Scan(&uid); err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, uid)
+	}
+
+	return userIDs, rows.Err()
+}
+
 func (r *ChatRepository) CreateChat(name string, owner_id, leaked_id int) (int64, error) {
 	var res sql.Result
 	var err error
@@ -67,7 +103,7 @@ func (r *ChatRepository) GetAllChats(user *user.User) ([]chat.Chat, error) {
 				LIMIT 1
 			)
 		LEFT JOIN messages m_unread 
-			ON m_unread.chat_id = c.id AND m_unread.is_read = 0 AND m_unread.sender_id = %d
+			ON m_unread.chat_id = c.id AND m_unread.is_read = 0 AND m_unread.sender_id != %d
 		GROUP BY c.id, c.name, c.created_at, m.content
 		ORDER BY c.id DESC;`, user.ID)
 	} else {
@@ -87,7 +123,7 @@ func (r *ChatRepository) GetAllChats(user *user.User) ([]chat.Chat, error) {
 				LIMIT 1
 			)
 		LEFT JOIN messages m_unread 
-			ON m_unread.chat_id = c.id AND m_unread.is_read = 0 AND m_unread.sender_id = %d
+			ON m_unread.chat_id = c.id AND m_unread.is_read = 0 AND m_unread.sender_id != %d
 		WHERE c.owner_id = %d
 		GROUP BY c.id, c.name, c.created_at, m.content;`, user.ID, user.ID)
 	}
@@ -234,4 +270,20 @@ func (r *ChatRepository) UpdateUnReadMsg(chatID, userID int) error {
 		WHERE chat_id = ? AND sender_id != ?`
 	_, err := r.db.Exec(query, chatID, userID)
 	return err
+}
+
+func (r *ChatRepository) GetChatByUserID(user *user.User) (*chat.Chat, error) {
+	query := `SELECT id, name, created_at FROM chats WHERE owner_id = ? AND leaked_id IS NULL`
+	fmt.Println(query)
+	fmt.Println(user.ID)
+	row := r.db.QueryRow(query, user.ID)
+	var c chat.Chat
+	err := row.Scan(&c.ID, &c.Name, &c.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
