@@ -1,8 +1,7 @@
 import * as path from 'path'
-
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-// https://vitejs.dev/config/
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -12,8 +11,8 @@ export default defineConfig({
     include: ['react-dnd', 'react-dnd-html5-backend', 'immutability-helper'],
   },
   // base: '/niitzi/',
-  // build: {
-  //   outDir: 'niitzi',
-  // },
+  build: {
+    outDir: path.resolve(__dirname, '../../mnt/web/ui/dist'),
+  },
   server: { open: true, port: 3000 },
 })

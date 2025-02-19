@@ -202,7 +202,7 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
         INNER JOIN users u ON u.uid = l.user_id
         LEFT JOIN leaked_screenshots ls ON ls.leaked_id = l.id
         LEFT JOIN leaked_urls lu ON lu.leaked_id = l.id
-				WHERE l.publish = 1
+				WHERE l.publish = 1 AND l.is_accept = 1
         ORDER BY l.id DESC;
     `
 	rows, err := r.db.Query(query)

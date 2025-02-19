@@ -254,7 +254,7 @@ export const LeakedPageTabs: React.FC = () => {
         urls: disclosures, // Отправляем disclosure ссылки
         payout: Number(mainValues.payout_value || 0),
         payout_unit: Number(mainValues.payout_unit || 0),
-        is_accept: selectedLeaked?.is_accept || 2,
+        is_accept: selectedLeaked?.is_accept || 1,
         publish: expiresStr != "" ? 0 : (selectedLeaked?.publish || 0)
       };
   
