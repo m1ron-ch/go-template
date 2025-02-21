@@ -4,7 +4,7 @@ type Repository interface {
 	GetAll() ([]Leaked, error)
 	GetByID(leakedID int) (*Leaked, error)
 	GetAllActive() ([]Leaked, error)
-	GetAllUnActive(userID int) ([]Leaked, error)
+	GetAllUnActive() ([]Leaked, error)
 	GetAllCapmaingByUserID(userID int) ([]Leaked, error)
 	GetCountNotAccepted() (int, error)
 	Create(leak *Leaked) (int, error)

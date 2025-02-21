@@ -168,35 +168,7 @@ func (h *Handler) GetAllActiveLeakeds(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetAllUnACtiveLeakeds(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodGet)
 
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		http.Error(w, "No token cookie", http.StatusUnauthorized)
-		return
-	}
-
-	tokenString := cookie.Value
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(h.config.JWTSecret), nil
-	})
-	if err != nil || !token.Valid {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		http.Error(w, "Invalid claims", http.StatusUnauthorized)
-		return
-	}
-
-	userFloat, ok := claims["user_id"].(float64)
-	if !ok {
-		http.Error(w, "Invalid user_id in token", http.StatusUnauthorized)
-		return
-	}
-	userID := int(userFloat)
-
-	leakedList, err := h.leakedService.GetAllUnActive(userID)
+	leakedList, err := h.leakedService.GetAllUnActive()
 	if err != nil {
 		http.Error(w, "Error fetching leaked data: "+err.Error(), http.StatusInternalServerError)
 		return

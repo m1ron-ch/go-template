@@ -138,7 +138,7 @@ const AwaitingPublicationPage: React.FC = () => {
           <Card
             key={leaked.id}
             hoverable
-            style={{ width: 350, backgroundColor: "#a5d6a7" }}
+            style={{ width: 350 }}
             cover={
               leaked.logo_url ? (
                 <img

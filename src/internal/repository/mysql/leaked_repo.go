@@ -325,7 +325,7 @@ func (r *LeakedRepository) GetAllActive() ([]leaked.Leaked, error) {
 	return result, nil
 }
 
-func (r *LeakedRepository) GetAllUnActive(userID int) ([]leaked.Leaked, error) {
+func (r *LeakedRepository) GetAllUnActive() ([]leaked.Leaked, error) {
 	query := `
         SELECT
             l.id,
@@ -339,8 +339,8 @@ func (r *LeakedRepository) GetAllUnActive(userID int) ([]leaked.Leaked, error) {
             l.logo_url,
             l.payout,
             l.payout_unit,
-						l.builder,
-						l.publish,
+			l.builder,
+			l.publish,
             u.uid,
             u.login,
             ls.id AS screenshot_id,

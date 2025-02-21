@@ -172,21 +172,6 @@ const CampaignsDashboard: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  /**
-   * Открыть модалку для редактирования выбранной кампании
-   */
-  const handleEditCampaign = (record: Campaign) => {
-    setSelectedCampaign(record);
-    setIsViewMode(false);
-    // Заполним editForm значениями
-    editForm.setFieldsValue({
-      company_name: record.company_name || "",
-      website: record.website || "",
-      description: record.description || "",
-    });
-    setIsModalVisible(true);
-  };
-
   const handleViewCampaign = (record: Campaign) => {
     setSelectedCampaign(record);
     setIsViewMode(true);
@@ -582,13 +567,13 @@ const CampaignsDashboard: React.FC = () => {
       title: "Expire",
       dataIndex: "expires",
       key: "expires",
-      render: (value: Dayjs) => value ? value.toString() : "N/A",
+      render: (value: Dayjs) => value ? (getTimeRemaining(value) === 'Expired' ? <Tag color="green">Expired</Tag> : `${value.format("YYYY-MM-DD HH:mm:ss")} (${getTimeRemaining(value)})`) : 'N/A',
     },
     {
       title: "Created",
       dataIndex: "created_at",
       key: "created_at",
-      render: (value: Dayjs) => value ? value.toString() : "N/A",
+      render: (value: Dayjs) => value ? value.format("YYYY-MM-DD HH:mm:ss") : "N/A",
     },
     {
       title: "Actions",
@@ -602,14 +587,6 @@ const CampaignsDashboard: React.FC = () => {
               handleViewCampaign(record);
             }}
           />
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditCampaign(record);
-            }}
-          >
-            Edit
-          </Button>
           <Popconfirm
             title="Confirm delete?"
             onConfirm={(e) => {
@@ -623,6 +600,22 @@ const CampaignsDashboard: React.FC = () => {
       ),
     },
   ];
+
+  const getTimeRemaining = (expires: dayjs.Dayjs) => {
+    const now = dayjs().valueOf();
+    const expiryTime = expires.valueOf();
+    const diff = expiryTime - now;
+
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      return (`${days}d : ${hours}h : ${minutes}m : ${seconds}s`);
+    } else {
+      return ("Expired");
+    }
+  }
 
   // Пример счётчика времени до истечения
   const [timeRemaining, setTimeRemaining] = useState<string>("");
@@ -641,7 +634,7 @@ const CampaignsDashboard: React.FC = () => {
           const seconds = Math.floor((diff % (1000 * 60)) / 1000);
           setTimeRemaining(`${days}d : ${hours}h : ${minutes}m : ${seconds}s`);
         } else {
-          setTimeRemaining("Expired");
+          setTimeRemaining('Expired');
         }
       };
 
@@ -683,7 +676,10 @@ const CampaignsDashboard: React.FC = () => {
 
       {selectedCampaign && (
         <>
-          <center>Expires: {timeRemaining}</center>
+          <div style={{ textAlign: "center", fontSize: "1.5rem", margin: "16px 0" }}>
+            Expires: {timeRemaining}
+          </div>
+
           <Card title={selectedCampaign.company_name} style={{ marginTop: 24 }}>
             <Tabs defaultActiveKey="1">
               <TabPane tab="Overview" key="1">

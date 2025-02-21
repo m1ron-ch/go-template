@@ -31,7 +31,10 @@ import s from './NewsPage.module.scss'
 import { Spacer } from '@/shared/Spacer'
 import moment from 'moment/min/moment-with-locales'
 import 'moment/locale/en-gb'
-import dayjs from 'dayjs'
+import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 dayjs.extend(customParseFormat)
@@ -43,8 +46,8 @@ interface News {
   title: string
   user: User
   type: number
-  create_at: string
-  update_at: string
+  create_at: Dayjs
+  update_at: Dayjs
   is_visibility: boolean
   image: string
   publish_date: string
@@ -425,10 +428,10 @@ export const NewsPage = () => {
     },
     {
       title: 'Date',
-      dataIndex: 'create_at',
-      key: 'create_at',
-      render: (_: any, n: News) => {
-        return `${n.date} ${n.time}`
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (value: string) => {
+        return dayjs.utc(value).local().format('YYYY-MM-DD HH:mm:ss');
       },
     },
     {

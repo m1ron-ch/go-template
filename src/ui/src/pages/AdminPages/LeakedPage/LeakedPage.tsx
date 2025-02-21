@@ -25,6 +25,7 @@ import {
   EyeOutlined,
   EditOutlined,
   ReloadOutlined,
+  DollarCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment"; // or dayjs
@@ -453,8 +454,14 @@ export const LeakedPageTabs: React.FC = () => {
       message.error("Ошибка при отклонении");
       console.error(error);
     }
-  };
-  
+  }
+
+  const getFullPayoutValue = (payout: number, payoutUnit: number) => {
+    // 0 => x1, 1 => x1000, 2 => x1_000_000, 3 => x1_000_000_000
+    const unitValues = [1000, 1_000_000, 1_000_000_000];
+    const multiplier = unitValues[payoutUnit] || 1;
+    return payout * multiplier;
+  };  
 
   // --------------------------------------
   // RENDER
@@ -592,14 +599,23 @@ export const LeakedPageTabs: React.FC = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Expires">
                   {selectedLeaked.expires
-                    ? new Date(selectedLeaked.expires).toLocaleString()
+                    ? dayjs.utc(selectedLeaked.expires).local().format("YYYY-MM-DD HH:mm:ss")
                     : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Payout">
-                  {selectedLeaked.payout} / Unit: {["K", "M", "B"][selectedLeaked.payout_unit] || "?"}
+                  <Space>
+                    <DollarCircleOutlined style={{ color: "#52c41a" }} />
+                    {new Intl.NumberFormat().format(
+                      getFullPayoutValue(
+                        selectedLeaked.payout,
+                        selectedLeaked.payout_unit
+                      )
+                    )}
+                    $
+                  </Space>
                 </Descriptions.Item>
                 <Descriptions.Item label="Created At">
-                  {new Date(selectedLeaked.created_at).toLocaleString()}
+                  {dayjs.utc(selectedLeaked.created_at).local().format("YYYY-MM-DD HH:mm:ss")}
                 </Descriptions.Item>
                 <Descriptions.Item label="Logo URL">
                   {selectedLeaked.logo_url ? (

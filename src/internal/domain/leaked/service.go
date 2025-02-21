@@ -3,7 +3,7 @@ package leaked
 type Service interface {
 	GetAll() ([]Leaked, error)
 	GetAllActive() ([]Leaked, error)
-	GetAllUnActive(userID int) ([]Leaked, error)
+	GetAllUnActive() ([]Leaked, error)
 	GetAllCapmaingByUserID(userID int) ([]Leaked, error)
 	GetCountNotAccepted() (int, error)
 	GetByID(leakedID int) (*Leaked, error)
@@ -30,8 +30,8 @@ func (s *service) GetAllActive() ([]Leaked, error) {
 	return s.repo.GetAllActive()
 }
 
-func (s *service) GetAllUnActive(userID int) ([]Leaked, error) {
-	return s.repo.GetAllUnActive(userID)
+func (s *service) GetAllUnActive() ([]Leaked, error) {
+	return s.repo.GetAllUnActive()
 }
 
 func (s *service) GetAllCapmaingByUserID(userID int) ([]Leaked, error) {
