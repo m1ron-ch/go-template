@@ -14,7 +14,7 @@ import {
   Popconfirm,
   DatePicker,
   Tag,
-  Modal,
+  Modal
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -23,6 +23,7 @@ import {
   UploadOutlined,
   ReloadOutlined,
   EyeOutlined,
+  DollarCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 
@@ -30,6 +31,7 @@ import { AppSettings } from "@/shared/const/appSettings";
 import { ChatsWithTabs } from "../ChatPage/ChatsWithTabs";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { useNavigate } from "react-router-dom";
 
 dayjs.extend(utc);
 
@@ -78,29 +80,24 @@ interface Campaign {
 }
 
 const CampaignsDashboard: React.FC = () => {
+  const navigate = useNavigate()
+
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
 
-  // Это форма, которая используется во вкладке «Edit» в карточке.
   const [form] = Form.useForm();
-
-  // Формы и состояния для вкладки «Create Blog» в карточке.
   const [createBlogForm] = Form.useForm();
+  const [editForm] = Form.useForm();
+
+  const [_, setUser] = useState<User | null>(null);
+
   const [disclosures, setDisclosures] = useState<UrlItem[]>([]);
   const [localLogoUrl, setLocalLogoUrl] = useState<string>("");
   const [localScreenshots, setLocalScreenshots] = useState<Screenshot[]>([]);
 
-  // === Добавляем новую форму для использования в Modal ===
-  const [editForm] = Form.useForm();
-
-  const [user, setUser] = useState<User | null>(null);
-
-
-
-  // Загрузка списка кампаний
   const fetchCampaigns = async () => {
     try {
       const response = await fetch(`${AppSettings.API_URL}/campaign`, {
@@ -109,19 +106,17 @@ const CampaignsDashboard: React.FC = () => {
       });
       if (!response.ok) throw new Error("Failed to fetch campaigns");
       const data = await response.json();
-  
-      const parsedData: Campaign[] = data.map((item: any) => {
-        return {
-          ...item,
-          created_at: item.created_at
-            ? dayjs.utc(item.created_at, "YYYY-MM-DD HH:mm:ss").local()
-            : dayjs(),
-          expires: item.expires
-            ? dayjs.utc(item.expires, "YYYY-MM-DD HH:mm:ss").local()
-            : dayjs().startOf("day"), // если expires пустая, ставим 00:00:00 текущего дня
-        };
-      });
-  
+
+      const parsedData: Campaign[] = data.map((item: any) => ({
+        ...item,
+        created_at: item.created_at
+          ? dayjs.utc(item.created_at, "YYYY-MM-DD HH:mm:ss").local()
+          : null,
+        expires: item.expires
+          ? dayjs.utc(item.expires, "YYYY-MM-DD HH:mm:ss").local()
+          : null,
+      }));
+
       setCampaigns(parsedData);
     } catch (error) {
       console.error("Error fetching campaigns:", error);
@@ -130,7 +125,6 @@ const CampaignsDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    // Example: fetch current user data
     fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
@@ -140,10 +134,12 @@ const CampaignsDashboard: React.FC = () => {
           const data = await res.json();
           setUser(data);
         } else {
+          navigate('/')
           setUser(null);
         }
       })
       .catch(() => {
+        navigate('/')
         setUser(null);
       });
   }, []);
@@ -152,22 +148,20 @@ const CampaignsDashboard: React.FC = () => {
     fetchCampaigns();
   }, []);
 
-  // При клике на строку в таблице — показываем карточку (ниже) с подробностями
+  // При клике на строку в таблице — показываем карточку с подробностями
   const handleRowClick = (record: Campaign) => {
-    record.expires = dayjs(record.expires);
+    // record.expires = record.expires 
+    // ? dayjs(record.expires)
+    // : undefined;
     setSelectedCampaign(record);
   };
 
   // ==============================
-  // Модальное окно (добавление/редактирование)
+  // Модальное окно (Add / Edit)
   // ==============================
-  /**
-   * Открыть модалку для добавления новой кампании
-   */
   const handleAddCampaign = () => {
     setSelectedCampaign(null);
     setIsViewMode(false);
-    // Сброс всех полей форм, которые вы используете в Modal
     editForm.resetFields();
     setIsModalVisible(true);
   };
@@ -183,17 +177,11 @@ const CampaignsDashboard: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  /**
-   * Сохранить (create/update) кампанию из формы модалки
-   */
   const handleModalSave = async () => {
     try {
-      // Данные из формы
       const values = await editForm.validateFields();
-      // Если есть выбранная (selectedCampaign), значит редактируем, иначе — создаём
       const isEditing = !!selectedCampaign;
 
-      // Соберём payload
       const payload: Partial<Campaign> = {
         company_name: values.company_name,
         website: values.website,
@@ -247,7 +235,7 @@ const CampaignsDashboard: React.FC = () => {
   };
 
   // ==============================
-  // Привязка к Card: при выборе кампании заполняем формы в Card
+  // Заполнение форм при выборе кампании
   // ==============================
   useEffect(() => {
     if (selectedCampaign) {
@@ -271,43 +259,49 @@ const CampaignsDashboard: React.FC = () => {
     });
   }
 
-  // Сохранение из вкладки «Edit» в карточке
-  const handleSave = async () => {
-    try {
-      // Данные из «Edit»-формы в карточке
-      const mainValues = form.getFieldsValue();
-      // Данные из «Create Blog» формы
-      const blogValues = createBlogForm.getFieldsValue();
+  function fillBlogForm(c: Campaign) {
+    createBlogForm.setFieldsValue({
+      blogCompanyName: c.company_name || "",
+      blogDescription: c.description || "",
+      blogText: c.blog || "",
+    });
+    setLocalLogoUrl(c.logo_url || "");
+    setLocalScreenshots(c.screenshots || []);
+    setDisclosures(c.urls || []);
+  }
 
+  // ==============================
+  // Сохранение из вкладки «Edit»
+  // ==============================
+  const handleSave = async () => {
+    if (!selectedCampaign) return;
+
+    try {
+      // Данные из «Edit»-формы
+      const mainValues = form.getFieldsValue();
+      const blogValues = createBlogForm.getFieldsValue(); // можно тоже подхватить
       const expiresStr = mainValues.expiration
         ? mainValues.expiration.toISOString()
         : null;
 
-      // Если нет выбранной кампании — значит, мы ничего не обновляем
-      if (!selectedCampaign) {
-        return;
-      }
+      console.log(expiresStr);
 
-      let fullPayload = {
-        id: selectedCampaign.id,
-        status: selectedCampaign.status,
-        blog: blogValues.blogText || selectedCampaign.blog || "",
-        created_at: selectedCampaign.created_at,
+      const fullPayload: Campaign = {
+        ...selectedCampaign,
         company_name: blogValues.blogCompanyName || selectedCampaign.company_name || "",
         description: blogValues.blogDescription || selectedCampaign.description || "",
+        blog: blogValues.blogText || selectedCampaign.blog || "",
+
         website: mainValues.website || null,
-        user: { id: user?.user_id },
-        expires: expiresStr,
+        expires: dayjs(expiresStr) || null, 
+        payout: Number(mainValues.payout_value || 0),
+        payout_unit: Number(mainValues.payout_unit || 0),
         logo_url: localLogoUrl,
         screenshots: localScreenshots,
         urls: disclosures,
-        payout: Number(mainValues.payout_value || 0),
-        payout_unit: Number(mainValues.payout_unit || 0),
         is_accept: selectedCampaign.is_accept || 2,
-        publish: expiresStr !== "" ? 0 : selectedCampaign.publish || 0,
+        publish: selectedCampaign.publish || 0,
       };
-
-      console.log("Saving from Card Edit tab payload:", fullPayload);
 
       const response = await fetch(`${AppSettings.API_URL}/leakeds/${selectedCampaign.id}`, {
         method: "PUT",
@@ -328,98 +322,89 @@ const CampaignsDashboard: React.FC = () => {
     }
   };
 
-  // Заполняем вкладку «Create Blog»
-  function fillBlogForm(c: Campaign) {
-    createBlogForm.setFieldsValue({
-      blogCompanyName: c.company_name || "",
-      blogDescription: c.description || "",
-      blogText: c.blog || "",
-    });
-    setLocalLogoUrl(c.logo_url || "");
-    setLocalScreenshots(c.screenshots || []);
-    setDisclosures(c.urls || []);
-  }
-
   // ==============================
-  // Логика вкладки "Create Blog"
+  // Новая кнопка «Save Draft» во вкладке «Create Blog»
   // ==============================
-  const addDisclosure = () => {
-    setDisclosures((prev) => [...prev, { id: Date.now(), url: "" }]);
-  };
-
-  const updateDisclosure = (id: number, value: string) => {
-    setDisclosures((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, url: value } : item))
-    );
-  };
-
-  const removeDisclosure = (id: number) => {
-    setDisclosures((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const handleRemoveScreenshot = (scrId: number) => {
-    setLocalScreenshots((prev) => prev.filter((s) => s.id !== scrId));
-  };
-
-  const handleLogoUpload = {
-    customRequest: async (options: any) => {
-      const { file, onSuccess, onError } = options;
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const res = await axios.post(`${AppSettings.API_URL}/upload`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        const data = res.data;
-        if (data.success === 1 && data.files?.length > 0) {
-          setLocalLogoUrl(data.files[0].url);
-        }
-        onSuccess && onSuccess(data, file);
-      } catch (error) {
-        onError && onError(error);
-      }
-    },
-  };
-
-  const handleScreenshotUpload = {
-    customRequest: async (options: any) => {
-      const { file, onSuccess, onError } = options;
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const res = await axios.post(`${AppSettings.API_URL}/upload`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        const data = res.data;
-        if (data.success === 1 && data.files?.length > 0) {
-          const uploadedScreens = data.files.map((f: any) => ({
-            id: Date.now(),
-            image_url: f.url,
-          }));
-          setLocalScreenshots((prev) => [...prev, ...uploadedScreens]);
-        }
-        onSuccess && onSuccess(data, file);
-      } catch (error) {
-        onError && onError(error);
-      }
-    },
-  };
-
-  const handlePublishBlog = async () => {
+  const handleSaveBlog = async () => {
     if (!selectedCampaign) return;
+
     try {
-      const values = await createBlogForm.validateFields();
+      // Берём данные из формы «Create Blog» и «Edit»
+      const blogValues = createBlogForm.getFieldsValue();
+      const mainValues = form.getFieldsValue(); // поля payout и т.д.
+
+      const expiresStr = mainValues.expiration
+        ? mainValues.expiration.toISOString()
+        : null;
+
       const updatedCampaign: Campaign = {
         ...selectedCampaign,
-        company_name: values.blogCompanyName || "",
-        description: values.blogDescription || "",
-        blog: values.blogText || "",
+        company_name: blogValues.blogCompanyName || "",
+        description: blogValues.blogDescription || "",
+        blog: blogValues.blogText || "",
         logo_url: localLogoUrl,
         screenshots: localScreenshots,
         urls: disclosures,
-        is_accept: 0,
+
+        website: mainValues.website || null,
+        expires: dayjs(expiresStr || undefined),
+        payout: Number(mainValues.payout_value || 0),
+        payout_unit: Number(mainValues.payout_unit || 0),
+
+        is_accept: selectedCampaign.is_accept || 0, 
+      };
+
+      const response = await fetch(
+        `${AppSettings.API_URL}/leakeds/${selectedCampaign.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(updatedCampaign),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to save blog draft.");
+      }
+      message.success("Blog draft saved successfully!");
+      fetchCampaigns();
+    } catch (error: any) {
+      message.error("Error saving blog draft: " + error.message);
+      console.error(error);
+    }
+  };
+
+  // ==============================
+  // Кнопка «Publish» во вкладке «Create Blog»
+  // ==============================
+  const handlePublishBlog = async () => {
+    if (!selectedCampaign) return;
+
+    try {
+      // Берём данные из форм «Create Blog» и «Edit» (поля payout, т.д.)
+      const blogValues = await createBlogForm.validateFields();
+      const mainValues = form.getFieldsValue();
+      const expiresStr = mainValues.expiration
+        ? mainValues.expiration.toISOString()
+        : null;
+
+      const updatedCampaign: Campaign = {
+        ...selectedCampaign,
+        company_name: blogValues.blogCompanyName || "",
+        description: blogValues.blogDescription || "",
+        blog: blogValues.blogText || "",
+        logo_url: localLogoUrl,
+        screenshots: localScreenshots,
+        urls: disclosures,
+
+        // из «Edit»-формы
+        website: mainValues.website || null,
+        expires: dayjs(expiresStr || undefined),
+        payout: Number(mainValues.payout_value || 0),
+        payout_unit: Number(mainValues.payout_unit || 0),
+
+        // При публикации
+        is_accept: 0, // Pending
       };
 
       const response = await fetch(
@@ -443,7 +428,7 @@ const CampaignsDashboard: React.FC = () => {
   };
 
   // ==============================
-  // Кнопка Generate Builds (Builder)
+  // Генерация сборок (Builder)
   // ==============================
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -452,9 +437,7 @@ const CampaignsDashboard: React.FC = () => {
       message.error("No campaign selected!");
       return;
     }
-
     selectedCampaign.builder = 1;
-
     setIsGenerating(true);
     try {
       const response = await fetch(`${AppSettings.API_URL}/generate_archive`, {
@@ -499,6 +482,13 @@ const CampaignsDashboard: React.FC = () => {
       setIsGenerating(false);
     }
   };
+
+  const getFullPayoutValue = (payout: number, payoutUnit: number) => {
+    // 0 => x1, 1 => x1000, 2 => x1_000_000, 3 => x1_000_000_000
+    const unitValues = [1000, 1_000_000, 1_000_000_000];
+    const multiplier = unitValues[payoutUnit] || 1;
+    return payout * multiplier;
+  }; 
 
   // Колонки таблицы
   const columns: ColumnsType<Campaign> = [
@@ -567,13 +557,19 @@ const CampaignsDashboard: React.FC = () => {
       title: "Expire",
       dataIndex: "expires",
       key: "expires",
-      render: (value: Dayjs) => value ? (getTimeRemaining(value) === 'Expired' ? <Tag color="green">Expired</Tag> : `${value.format("YYYY-MM-DD HH:mm:ss")} (${getTimeRemaining(value)})`) : 'N/A',
+      render: (value: Dayjs) =>
+        value
+          ? getTimeRemaining(value) === "Expired"
+            ? <Tag color="green">Expired</Tag>
+            : `${value.format("YYYY-MM-DD HH:mm:ss")} (${getTimeRemaining(value)})`
+          : "N/A",
     },
     {
       title: "Created",
       dataIndex: "created_at",
       key: "created_at",
-      render: (value: Dayjs) => value ? value.format("YYYY-MM-DD HH:mm:ss") : "N/A",
+      render: (value: Dayjs) =>
+        value ? value.format("YYYY-MM-DD HH:mm:ss") : "N/A",
     },
     {
       title: "Actions",
@@ -605,17 +601,18 @@ const CampaignsDashboard: React.FC = () => {
     const now = dayjs().valueOf();
     const expiryTime = expires.valueOf();
     const diff = expiryTime - now;
-
     if (diff > 0) {
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      return (`${days}d : ${hours}h : ${minutes}m : ${seconds}s`);
+      return `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
     } else {
-      return ("Expired");
+      return "Expired";
     }
-  }
+  };
 
   // Пример счётчика времени до истечения
   const [timeRemaining, setTimeRemaining] = useState<string>("");
@@ -629,21 +626,28 @@ const CampaignsDashboard: React.FC = () => {
 
         if (diff > 0) {
           const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const hours = Math.floor(
+            (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
           const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
           const seconds = Math.floor((diff % (1000 * 60)) / 1000);
           setTimeRemaining(`${days}d : ${hours}h : ${minutes}m : ${seconds}s`);
         } else {
-          setTimeRemaining('Expired');
+          setTimeRemaining("Expired");
         }
       };
 
       updateTime();
       const interval = setInterval(updateTime, 1000);
       return () => clearInterval(interval);
+    } else {
+      setTimeRemaining("N/A");
     }
   }, [selectedCampaign]);
 
+  // ==============================
+  // UI
+  // ==============================
   return (
     <div style={{ padding: 24 }}>
       <Space>
@@ -676,7 +680,9 @@ const CampaignsDashboard: React.FC = () => {
 
       {selectedCampaign && (
         <>
-          <div style={{ textAlign: "center", fontSize: "1.5rem", margin: "16px 0" }}>
+          <div
+            style={{ textAlign: "center", fontSize: "1.5rem", margin: "16px 0" }}
+          >
             Expires: {timeRemaining}
           </div>
 
@@ -695,19 +701,27 @@ const CampaignsDashboard: React.FC = () => {
                       {selectedCampaign.description}
                     </Descriptions.Item>
                     <Descriptions.Item label="Expires">
-                    {selectedCampaign.expires
+                      {selectedCampaign.expires
                         ? selectedCampaign.expires.format("YYYY-MM-DD HH:mm:ss")
                         : "N/A"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Payout">
-                      {selectedCampaign.payout} (
-                      {["K", "M", "B"][selectedCampaign.payout_unit || 0] ||
-                        "?"}
-                      )
+                      <Space>
+                        <DollarCircleOutlined style={{ color: "#52c41a" }} />
+                        {new Intl.NumberFormat().format(
+                          getFullPayoutValue(
+                            selectedCampaign.payout || 0,
+                            selectedCampaign.payout_unit || 0
+                          )
+                        )}
+                        $
+                      </Space>
                     </Descriptions.Item>
                     <Descriptions.Item label="Created At">
-                    {selectedCampaign.created_at
-                        ? selectedCampaign.created_at.format("YYYY-MM-DD HH:mm:ss")
+                      {selectedCampaign.created_at
+                        ? selectedCampaign.created_at.format(
+                            "YYYY-MM-DD HH:mm:ss"
+                          )
                         : "N/A"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Logo URL">
@@ -806,7 +820,7 @@ const CampaignsDashboard: React.FC = () => {
                 <Button
                   key="save"
                   type="primary"
-                  style={{ marginTop: "25px" }}
+                  style={{ marginTop: 25 }}
                   onClick={handleSave}
                 >
                   Save
@@ -846,7 +860,33 @@ const CampaignsDashboard: React.FC = () => {
                         </Button>
                       </div>
                     ) : (
-                      <Upload {...handleLogoUpload}>
+                      <Upload
+                        {...{
+                          customRequest: async (options: any) => {
+                            const { file, onSuccess, onError } = options;
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            try {
+                              const res = await axios.post(
+                                `${AppSettings.API_URL}/upload`,
+                                formData,
+                                {
+                                  headers: {
+                                    "Content-Type": "multipart/form-data",
+                                  },
+                                }
+                              );
+                              const data = res.data;
+                              if (data.success === 1 && data.files?.length > 0) {
+                                setLocalLogoUrl(data.files[0].url);
+                              }
+                              onSuccess && onSuccess(data, file);
+                            } catch (error) {
+                              onError && onError(error);
+                            }
+                          },
+                        }}
+                      >
                         <Button icon={<UploadOutlined />}>Upload Logo</Button>
                       </Upload>
                     )}
@@ -863,7 +903,12 @@ const CampaignsDashboard: React.FC = () => {
                   <Form.Item label="Disclosures">
                     <Button
                       type="dashed"
-                      onClick={addDisclosure}
+                      onClick={() =>
+                        setDisclosures((prev) => [
+                          ...prev,
+                          { id: Date.now(), url: "" },
+                        ])
+                      }
                       style={{ marginBottom: 8 }}
                     >
                       + Add Disclosure Link
@@ -877,12 +922,24 @@ const CampaignsDashboard: React.FC = () => {
                           style={{ width: "500px" }}
                           placeholder="Enter disclosure link"
                           value={d.url}
-                          onChange={(e) => updateDisclosure(d.id, e.target.value)}
+                          onChange={(e) =>
+                            setDisclosures((prev) =>
+                              prev.map((item) =>
+                                item.id === d.id
+                                  ? { ...item, url: e.target.value }
+                                  : item
+                              )
+                            )
+                          }
                         />
                         <Button
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => removeDisclosure(d.id)}
+                          onClick={() =>
+                            setDisclosures((prev) =>
+                              prev.filter((item) => item.id !== d.id)
+                            )
+                          }
                         />
                       </Space>
                     ))}
@@ -890,9 +947,38 @@ const CampaignsDashboard: React.FC = () => {
 
                   <Form.Item label="Screenshots">
                     <Upload
-                      {...handleScreenshotUpload}
                       multiple
                       showUploadList={false}
+                      customRequest={async (options: any) => {
+                        const { file, onSuccess, onError } = options;
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        try {
+                          const res = await axios.post(
+                            `${AppSettings.API_URL}/upload`,
+                            formData,
+                            {
+                              headers: {
+                                "Content-Type": "multipart/form-data",
+                              },
+                            }
+                          );
+                          const data = res.data;
+                          if (
+                            data.success === 1 &&
+                            data.files?.length > 0
+                          ) {
+                            const uploadedScreens = data.files.map((f: any) => ({
+                              id: Date.now(),
+                              image_url: f.url,
+                            }));
+                            setLocalScreenshots((prev) => [...prev, ...uploadedScreens]);
+                          }
+                          onSuccess && onSuccess(data, file);
+                        } catch (error) {
+                          onError && onError(error);
+                        }
+                      }}
                     >
                       <Button icon={<UploadOutlined />}>Upload Screenshots</Button>
                     </Upload>
@@ -933,7 +1019,11 @@ const CampaignsDashboard: React.FC = () => {
                             danger
                             size="small"
                             icon={<DeleteOutlined />}
-                            onClick={() => handleRemoveScreenshot(s.id)}
+                            onClick={() =>
+                              setLocalScreenshots((prev) =>
+                                prev.filter((x) => x.id !== s.id)
+                              )
+                            }
                             style={{
                               position: "absolute",
                               top: 4,
@@ -952,10 +1042,15 @@ const CampaignsDashboard: React.FC = () => {
                       ))}
                     </div>
                   </Form.Item>
+
+                  {/* Кнопки Save Draft и Publish */}
                   <Form.Item>
-                    <Button type="primary" onClick={handlePublishBlog}>
-                      Publish
-                    </Button>
+                    <Space>
+                      <Button onClick={handleSaveBlog}>Save Draft</Button>
+                      <Button type="primary" onClick={handlePublishBlog}>
+                        Publish
+                      </Button>
+                    </Space>
                   </Form.Item>
                 </Form>
               </TabPane>
@@ -968,7 +1063,7 @@ const CampaignsDashboard: React.FC = () => {
         </>
       )}
 
-      {/* ========== Модальное окно для создания/редактирования ========== */}
+      {/* ========== Модальное окно для добавления/редактирования ========== */}
       <Modal
         title={
           isViewMode

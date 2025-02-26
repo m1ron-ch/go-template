@@ -269,7 +269,7 @@ export const UsersPage: React.FC = () => {
               style={{ marginRight: 8 }}
             />
           )}
-          {u.id !== user?.id && (user?.role_id === 1 || u.role_id !== 1) && (
+          {u.id !== user?.id && u.status_id != 3 && (user?.role_id === 1 || u.role_id !== 1) && (
             <Button icon={<DeleteOutlined />} onClick={() => handleDeleteUser(u)} danger />
           )}
         </div>

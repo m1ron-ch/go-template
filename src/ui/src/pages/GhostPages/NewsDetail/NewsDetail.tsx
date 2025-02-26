@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Card, Typography, Spin, Image } from 'antd';
 import { AppSettings } from '@/shared';
-// Импортируйте при необходимости ваши настройки, типы и т.д.
-// import { AppSettings } from '@/config';
+
+const { Title, Text } = Typography;
+
+interface User {
+  name: string;
+}
 
 interface NewsItem {
   id: number;
   title: string;
-  content: string; // Здесь контент в формате HTML
+  content: string; // HTML-контент
   image: string;
-  // ... остальные поля (image, description и т.д.)
+  created_at: string;
+  user: User;
 }
 
 export const NewsDetail: React.FC = () => {
-  const { id } = useParams();       // достаём :id из URL
+  const { id } = useParams<{ id: string }>();
   const [news, setNews] = useState<NewsItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,23 +49,47 @@ export const NewsDetail: React.FC = () => {
     }
   }, [id]);
 
+  const convertUTCToLocal = (utcDate: string) => {
+    const date = new Date(utcDate);
+    return date.toLocaleString();
+  };
+
   if (isLoading) {
-    return <div>Загрузка...</div>;
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+      </div>
+    );
   }
 
   if (!news) {
-    return <div>Новость не найдена</div>;
+    return <div style={{ textAlign: 'center', padding: '50px' }}>Новость не найдена</div>;
   }
 
   return (
-    <center>
-      <div style={{ padding: 20, width: '1200px' }}>
-      <h1>{news.title}</h1>
-      <center><img style={{maxWidth: '400px'}} src={news.image} /></center>
-      {/* Если news.content содержит HTML, выводим через dangerouslySetInnerHTML */}
-      <div dangerouslySetInnerHTML={{ __html: news.content }} />
+    <div style={{ maxWidth: '1200px', margin: 'auto', padding: '20px' }}>
+      <Card
+        title={
+          <Title 
+            level={2}
+            style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
+          >
+            {news.title}
+          </Title>
+        }
+        extra={<Text type="secondary">{convertUTCToLocal(news.created_at)}</Text>}
+      >
+        {news.image && (
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <Image src={news.image} alt={news.title} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+          </div>
+        )}
+        <div dangerouslySetInnerHTML={{ __html: news.content }} style={{ marginBottom: '20px' }} />
+        <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '10px', textAlign: 'right' }}>
+          <Text strong>Author: </Text>
+          <Text>{news.user.name}</Text>
+        </div>
+      </Card>
     </div>
-    </center>
-    
   );
 };

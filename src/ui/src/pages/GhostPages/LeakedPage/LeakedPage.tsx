@@ -23,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import { AppSettings } from "@/shared";
+import dayjs from "dayjs";
 
 const { Meta } = Card;
 const { Title, Text, Paragraph } = Typography;
@@ -272,7 +273,7 @@ const LeakedPage: React.FC = () => {
               </Descriptions.Item>
 
               <Descriptions.Item label="Date of Publication">
-                {new Date(selectedLeaked.created_at).toLocaleDateString()}
+                {dayjs.utc(selectedLeaked.created_at).local().format("YYYY-MM-DD HH:mm:ss")}
               </Descriptions.Item>
 
               <Descriptions.Item label="Views">

@@ -37,7 +37,7 @@ func PublishScheduledLeaked(leakedService leaked.Service) {
 		before := l.Expires.UTC().Before(now)
 		equal := l.Expires.UTC().Equal(now)
 
-		if before || equal {
+		if (before || equal) && l.IsAccept == 1 {
 			l.Status = 1
 			l.Publish = 1
 			l.ExpiresStr = ""

@@ -68,10 +68,14 @@ ORDER BY n.uid DESC;`)
 }
 
 func (r *NewsRepository) GetByID(id int64) (*news.News, error) {
-	row := r.db.QueryRow("SELECT uid, title, preview, image, content, created_at, is_visibility, json FROM news WHERE uid = ?", id)
+	row := r.db.QueryRow(`
+		SELECT n.uid, n.title, n.preview, n.image, n.content, n.created_at, n.is_visibility, n.JSON, u.name
+		FROM news n
+		INNER JOIN users u ON u.uid = n.user_id
+		WHERE n.uid = ?`, id)
 
 	var n news.News
-	if err := row.Scan(&n.ID, &n.Title, &n.Preview, &n.Image, &n.Content, &n.CreatedAt, &n.IsVisibility, &n.Json); err != nil {
+	if err := row.Scan(&n.ID, &n.Title, &n.Preview, &n.Image, &n.Content, &n.CreatedAt, &n.IsVisibility, &n.Json, &n.User.Name); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}

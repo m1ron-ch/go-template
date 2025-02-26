@@ -30,7 +30,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.StatusID > 1 {
-		http.Error(w, "Unauthorized. User account Blocked", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized. User account Blocked or Deleted", http.StatusUnauthorized)
 		return
 	}
 

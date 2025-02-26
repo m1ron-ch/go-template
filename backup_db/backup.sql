@@ -16,24 +16,28 @@
 
 
 -- Дамп структуры базы данных blog
-CREATE DATABASE IF NOT EXISTS `blog` /*!40100 DEFAULT CHARACTER SET latin1 */ /*!80016 DEFAULT ENCRYPTION='N' */;
+CREATE DATABASE IF NOT EXISTS `blog` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `blog`;
 
 -- Дамп структуры для таблица blog.chats
 CREATE TABLE IF NOT EXISTS `chats` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` text NOT NULL,
+  `name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `owner_id` int DEFAULT NULL,
   `leaked_id` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Дамп данных таблицы blog.chats: ~4 rows (приблизительно)
 DELETE FROM `chats`;
 INSERT INTO `chats` (`id`, `name`, `created_at`, `owner_id`, `leaked_id`) VALUES
 	(8, 'test_user1', '2025-02-17 12:36:37', 41, NULL),
-	(9, 'Apache Kafka', '2025-02-17 13:22:45', 41, 39);
+	(9, 'Apache Kafka', '2025-02-17 13:22:45', 41, 39),
+	(10, 'Telegram', '2025-02-25 05:34:47', 41, 41),
+	(11, 'telegram test', '2025-02-25 06:08:38', 41, 42),
+	(12, 'ЕУЕУЕУЕ еуе еуЕУ ЕУЕ', '2025-02-25 06:58:24', 41, 43),
+	(13, 'balbl llall', '2025-02-25 07:01:13', 41, 44);
 
 -- Дамп структуры для таблица blog.contact_us
 CREATE TABLE IF NOT EXISTS `contact_us` (
@@ -44,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `contact_us` (
 -- Дамп данных таблицы blog.contact_us: ~1 rows (приблизительно)
 DELETE FROM `contact_us`;
 INSERT INTO `contact_us` (`content`, `json`) VALUES
-	('<div class="page-text-wrapper">\n              <p style="text-align: center;">Contact Us 1</p>\n<p><img style="display: block; margin-left: auto; margin-right: auto;" src="../static/media/Screenshot 2023-10-11 211100_1738977321.png" alt="My description" width="254" height="206"></p>\n            </div>', '{"time":1739343626231,"blocks":[{"id":"bcJcr8cVB9","type":"p","data":{"text":"<p style=\\"text-align: center;\\">Contact Us 1</p>\\n<p><img style=\\"display: block; margin-left: auto; margin-right: auto;\\" src=\\"../static/media/Screenshot 2023-10-11 211100_1738977321.png\\" alt=\\"My description\\" width=\\"254\\" height=\\"206\\"></p>"}}],"version":"2.30.1"}');
+	('<div class="page-text-wrapper">\n              <p style="text-align: center;"><span style="font-size: 36pt;"><s><span style="text-decoration: underline;"><em><strong><span style="font-family: \'comic sans ms\', sans-serif; color: #e03e2d; background-color: #bfedd2; text-decoration: underline;">Contact Us</span></strong></em></span></s></span></p>\n<hr>\n<p style="text-align: center;"><span style="color: #e03e2d;">VV_VV_VV</span></p>\n            </div>', '{"time":1740464469038,"blocks":[{"id":"bcJcr8cVB9","type":"p","data":{"text":"<p style=\\"text-align: center;\\"><span style=\\"font-size: 36pt;\\"><s><span style=\\"text-decoration: underline;\\"><em><strong><span style=\\"font-family: \'comic sans ms\', sans-serif; color: #e03e2d; background-color: #bfedd2; text-decoration: underline;\\">Contact Us</span></strong></em></span></s></span></p>\\n<hr>\\n<p style=\\"text-align: center;\\"><span style=\\"color: #e03e2d;\\">VV_VV_VV</span></p>"}}],"version":"2.30.1"}');
 
 -- Дамп структуры для таблица blog.leaked
 CREATE TABLE IF NOT EXISTS `leaked` (
@@ -64,16 +68,20 @@ CREATE TABLE IF NOT EXISTS `leaked` (
   `publish` tinyint DEFAULT '0',
   `is_accept` tinyint DEFAULT '2' COMMENT '-1 - отклонено, 0 - ожидание, 1 - принято, 2 - draft',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog.leaked: ~5 rows (приблизительно)
+-- Дамп данных таблицы blog.leaked: ~9 rows (приблизительно)
 DELETE FROM `leaked`;
 INSERT INTO `leaked` (`id`, `created_at`, `payout`, `payout_unit`, `company_name`, `website`, `logo_url`, `blog`, `description`, `user_id`, `expires`, `status`, `builder`, `publish`, `is_accept`) VALUES
 	(34, '2025-02-12 08:24:18', 101, 0, 'localhost', 'http://localhost:3000/', '/static/media/Screenshot 2023-03-01 155647_1739348655.png', 'blog', 'description', 5, '2025-03-17 09:54:50', 1, 0, 0, 2),
 	(36, '2025-02-12 21:46:38', 99, 0, 'miron host', 'host.by', '/static/media/Screenshot 2023-03-01 155647_1739427766.png', 'blog', 'des', 41, NULL, 1, 1, 1, 1),
 	(38, '2025-02-17 11:07:18', 199, 0, 'Apache Kafka', 'http://192.168.151.80:8080/', '/static/media/Без имени_1739790409.png', 'What is Kafka used for? Kafka is used to build real-time streaming data pipelines and real-time streaming applications. A data pipeline reliably processes and moves data from one system to another, and a streaming application is an application that consumes streams of data.', 'Apache Kafka is an open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications. ', 5, NULL, 1, 0, 1, 2),
 	(39, '2025-02-17 13:22:45', 25, 0, 'Apache Kafka', 'https://www.kafka.com', '/static/media/Без имени1_1739798645.png', 'kekkekekkeee3 232 323 ', 'kkkkkkk 11 123 3', 41, '2025-02-18 21:00:00', 1, 0, 0, 2),
-	(40, '2025-02-18 14:12:06', 111111, 0, 'test.com', 'test.com', '/static/media/download_1739888372.png', '', '', 5, NULL, 0, 0, 0, 2);
+	(40, '2025-02-18 14:12:06', 111111, 0, 'test.com', 'test.com', '/static/media/download_1739888372.png', '', '', 5, NULL, 0, 0, 0, 2),
+	(41, '2025-02-25 05:34:47', 0, 0, 'Telegram', 'telegram.org', '/static/media/Снимок экрана 2024-10-25 153630_1740461703.png', '', 'blblbllblbbllblb lblbllblbllblb lbbllblblblb', 41, NULL, 0, 0, 0, 2),
+	(42, '2025-02-25 06:08:38', 0, 0, 'telegram test', 'telegram.org', '', '', 'telegram.orgtelegram.orgtelegram.orgtelegram.orgtelegram.orgtelegram.orgtelegram.orgtelegram.org', 41, NULL, 0, 0, 0, 0),
+	(43, '2025-02-25 06:58:24', 0, 0, 'ЕУЕУЕУЕ еуе еуЕУ ЕУЕ', 'te.vv', '/static/media/Снимок экрана 2024-12-20 113140_1740466723.png', '', 'ddddddd aaa ss ww ee qqq cc vv 1 12312 213 1212 312', 41, '2025-02-25 07:00:14', 0, 0, 0, 0),
+	(44, '2025-02-25 07:01:13', 10, 2, 'balbl llall', 'blblb.go', '', '', 'dasd', 41, NULL, 0, 0, 0, 2);
 
 -- Дамп структуры для таблица blog.leaked_screenshots
 CREATE TABLE IF NOT EXISTS `leaked_screenshots` (
@@ -422,10 +430,10 @@ INSERT INTO `log_event_type` (`uid`, `name`) VALUES
 -- Дамп структуры для таблица blog.log_level
 CREATE TABLE IF NOT EXISTS `log_level` (
   `uid` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) NOT NULL,
+  `name` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`uid`),
   UNIQUE KEY `level_name_UNIQUE` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
 
 -- Дамп данных таблицы blog.log_level: ~4 rows (приблизительно)
 DELETE FROM `log_level`;
@@ -448,9 +456,9 @@ CREATE TABLE IF NOT EXISTS `messages` (
   PRIMARY KEY (`id`),
   KEY `chat_id` (`chat_id`),
   CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`chat_id`) REFERENCES `chats` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog.messages: ~15 rows (приблизительно)
+-- Дамп данных таблицы blog.messages: ~22 rows (приблизительно)
 DELETE FROM `messages`;
 INSERT INTO `messages` (`id`, `chat_id`, `sender_id`, `content`, `is_read`, `created_at`, `updated_at`, `is_deleted`) VALUES
 	(13, 8, 5, 'dasdasd', 1, '2025-02-17 13:04:44', NULL, 0),
@@ -473,7 +481,8 @@ INSERT INTO `messages` (`id`, `chat_id`, `sender_id`, `content`, `is_read`, `cre
 	(32, 9, 5, 'hiiiiii', 1, '2025-02-18 08:54:14', '2025-02-18 08:54:43', 1),
 	(33, 9, 5, 'dddd', 1, '2025-02-18 08:54:18', '2025-02-18 08:54:42', 1),
 	(34, 9, 41, '13123', 1, '2025-02-18 08:54:20', NULL, 0),
-	(35, 8, 5, 'helllllooooow', 0, '2025-02-18 12:59:14', NULL, 0);
+	(35, 8, 5, 'helllllooooow', 0, '2025-02-18 12:59:14', NULL, 0),
+	(36, 11, 41, 'hellllo', 0, '2025-02-25 06:09:13', NULL, 0);
 
 -- Дамп структуры для таблица blog.news
 CREATE TABLE IF NOT EXISTS `news` (
@@ -490,7 +499,7 @@ CREATE TABLE IF NOT EXISTS `news` (
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb3;
 
--- Дамп данных таблицы blog.news: ~5 rows (приблизительно)
+-- Дамп данных таблицы blog.news: ~6 rows (приблизительно)
 DELETE FROM `news`;
 INSERT INTO `news` (`uid`, `created_at`, `update_at`, `is_visibility`, `user_id`, `image`, `title`, `preview`, `content`, `json`) VALUES
 	(33, '2023-05-23 06:27:38', '2025-02-02 14:04:39', 1, 4, 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg', 'Largest US addiction treatment provider notifies patients of data breach', 'BayMark Health Services... personal and health information in a September 2024 breach.', 'BayMark Health Services... personal and health information in a September 2024 breach.', ''),
@@ -509,27 +518,27 @@ CREATE TABLE IF NOT EXISTS `order_service` (
 -- Дамп данных таблицы blog.order_service: ~1 rows (приблизительно)
 DELETE FROM `order_service`;
 INSERT INTO `order_service` (`content`, `json`) VALUES
-	('<div class="page-text-wrapper">\n              <p>Order a service</p>\n            </div>', '{"time":1738738266357,"blocks":[{"id":"YvQ0v2eQZR","type":"p","data":{"text":"<p>Order a service</p>"}}],"version":"2.30.1"}');
+	('<div class="page-text-wrapper">\n              <p style="text-align: center;"><strong>Order a service</strong></p>\n            </div>', '{"time":1740464457446,"blocks":[{"id":"YvQ0v2eQZR","type":"p","data":{"text":"<p style=\\"text-align: center;\\"><strong>Order a service</strong></p>"}}],"version":"2.30.1"}');
 
 -- Дамп структуры для таблица blog.terms_and_conditions
 CREATE TABLE IF NOT EXISTS `terms_and_conditions` (
-  `content` longtext,
-  `json` longtext
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Дамп данных таблицы blog.terms_and_conditions: ~1 rows (приблизительно)
 DELETE FROM `terms_and_conditions`;
 INSERT INTO `terms_and_conditions` (`content`, `json`) VALUES
-	('<div class="page-text-wrapper">\n              <p style="text-align: center;">Terms and Conditions</p>\n<p><img style="display: block; margin-left: auto; margin-right: auto;" src="../static/media/Screenshot 2023-09-15 122706_1739345157.png" alt="My description" width="167" height="286"></p>\n            </div>', '{"time":1739349551549,"blocks":[{"id":"1nRlui53wp","type":"p","data":{"text":"<p style=\\"text-align: center;\\">Terms and Conditions</p>\\n<p><img style=\\"display: block; margin-left: auto; margin-right: auto;\\" src=\\"../static/media/Screenshot 2023-09-15 122706_1739345157.png\\" alt=\\"My description\\" width=\\"167\\" height=\\"286\\"></p>"}}],"version":"2.30.1"}');
+	('<div class="page-text-wrapper">\n              <p style="text-align: center;"><span style="font-size: 36pt;">Terms and Conditions</span></p>\n            </div>', '{"time":1740464434526,"blocks":[{"id":"1nRlui53wp","type":"p","data":{"text":"<p style=\\"text-align: center;\\"><span style=\\"font-size: 36pt;\\">Terms and Conditions</span></p>"}}],"version":"2.30.1"}');
 
 -- Дамп структуры для таблица blog.used_folders
 CREATE TABLE IF NOT EXISTS `used_folders` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `leaked_id` int NOT NULL,
-  `folder_name` varchar(255) NOT NULL,
-  `archive_number` varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT '1',
-  `status` enum('pending','assigned','completed') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'assigned',
+  `folder_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `archive_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '1',
+  `status` enum('pending','assigned','completed') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'assigned',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `archive_number` (`archive_number`),
@@ -537,9 +546,9 @@ CREATE TABLE IF NOT EXISTS `used_folders` (
   KEY `company_id` (`leaked_id`) USING BTREE,
   CONSTRAINT `used_folders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE,
   CONSTRAINT `used_folders_ibfk_2` FOREIGN KEY (`leaked_id`) REFERENCES `leaked` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Дамп данных таблицы blog.used_folders: ~0 rows (приблизительно)
+-- Дамп данных таблицы blog.used_folders: ~1 rows (приблизительно)
 DELETE FROM `used_folders`;
 INSERT INTO `used_folders` (`id`, `user_id`, `leaked_id`, `folder_name`, `archive_number`, `status`, `created_at`) VALUES
 	(1, 41, 36, 'archive_1', '1', 'assigned', '2025-02-13 14:27:25');

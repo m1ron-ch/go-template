@@ -112,6 +112,37 @@ func (h *Handler) CreateCampaing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		http.Error(w, "No token cookie", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := cookie.Value
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(h.config.JWTSecret), nil
+	})
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid claims", http.StatusUnauthorized)
+		return
+	}
+
+	userFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		http.Error(w, "Invalid user_id in token", http.StatusUnauthorized)
+		return
+	}
+	userID := int(userFloat)
+
+	user, _ := h.userService.GetUserByID(int64(userID))
+	newLeak.User = *user
+
 	// Optionally set creation time if your domain logic needs it:
 	// newLeak.CreateAt = time.Now()  // or other default fields
 

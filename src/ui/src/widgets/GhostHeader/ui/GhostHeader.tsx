@@ -48,22 +48,20 @@ export const GhostHeader: React.FC = () => {
     })
   }
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps['items'] = [
     user?.role_id === 1
-      ? { key: 'admin_panel', label: <Link to="/admin">Admin Panel</Link> }
+      ? { key: 'admin_panel', label: <Link to="/admin/news">Admin Panel</Link> }
       : null,
     user?.role_id !== 1
-      ? { key: 'Campaing', label: <Link to="/campaing">Campaing</Link> }
+      ? { key: 'Campaign', label: <Link to="/campaign">Campaign</Link> }
       : null,
     {
       key: 'logout',
-      label: (
-        <span style={{ color: 'red' }} onClick={handleLogout}>
-          Logout
-        </span>
-      ),
-    }
-  ].filter(Boolean) as MenuProps['items']
+      label: 'Logout',
+      style: { color: 'red' },
+      onClick: handleLogout,
+    },
+  ].filter(Boolean);
 
   const userMenu = <Menu items={userMenuItems} />
 

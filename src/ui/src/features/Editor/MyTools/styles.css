@@ -1,15 +1,8 @@
 .ce-block__content,
 .ce-toolbar__content {
-  max-width: calc(100% - 15%) !important;
+  max-width: 100% !important;
 }
 .cdx-block {
   max-width: 100% !important;
 }
 
-.ce-block__content,
-.ce-toolbar__content {
-  max-width: calc(100% - 15%) !important;
-}
-.cdx-block {
-  max-width: 100% !important;
-}

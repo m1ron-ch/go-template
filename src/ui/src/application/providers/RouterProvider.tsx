@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
       { path: 'terms-and-conditions', element: <TermsConditions /> },
       { path: 'order-service', element: <OrderService /> },
       { path: 'contact', element: <ContactUs /> },
-      { path: 'campaing', element: <Campaign /> },
+      { path: 'campaign', element: <Campaign /> },
       { path: 'leaked-data', element: <LeakedPage /> },
       { path: 'leaked-data/:id', element: <LealedDetail /> },
       { path: 'awaiting-publication', element: <AwaitingPublicationPage /> },

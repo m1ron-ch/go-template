@@ -599,7 +599,7 @@ export const LeakedPageTabs: React.FC = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Expires">
                   {selectedLeaked.expires
-                    ? dayjs.utc(selectedLeaked.expires).local().format("YYYY-MM-DD HH:mm:ss")
+                    ? selectedLeaked.expires
                     : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Payout">
@@ -669,14 +669,14 @@ export const LeakedPageTabs: React.FC = () => {
               </Form.Item>
 
               <Form.Item label="Expiration" name="expiration">
-              <DatePicker
-                showTime
-                // onChange={(date, dateString) => {
-                //   form.setFieldsValue({ publish_date: date })
-                // }}
-                format="YYYY-MM-DD HH:mm:ss"
-                style={{ width: '100%' }}
-              />
+                <DatePicker
+                  showTime
+                  // onChange={(date, dateString) => {
+                  //   form.setFieldsValue({ publish_date: date })
+                  // }}
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: '100%' }}
+                />
               </Form.Item>
 
               <Form.Item label="Target Payout (USD)">

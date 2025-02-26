@@ -7,7 +7,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 COPY vendor/ vendor/
 COPY . .
-COPY configs/ /app/configs/
+# COPY configs/ /app/configs/
 # COPY ui/ /app/ui/dist
 
 # Используем `vendor` для загрузки зависимостей
