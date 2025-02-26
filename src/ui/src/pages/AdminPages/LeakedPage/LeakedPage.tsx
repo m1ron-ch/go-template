@@ -108,6 +108,11 @@ export const LeakedPageTabs: React.FC = () => {
   
       // Получаем данные с сервера
       const data: Leaked[] = await response.json();
+
+      if (!Array.isArray(data) ) {
+        setLeakeds([]);
+        return;
+      }    
   
       // Преобразуем поле expires для каждого элемента
       const transformedData = data.map((item) => ({
@@ -684,7 +689,7 @@ export const LeakedPageTabs: React.FC = () => {
                   <Form.Item
                     name="payout_value"
                     noStyle
-                    rules={[{ pattern: /^[0-9]*$/, message: "Must be a number" }]}
+                    rules={[{ pattern: /^\d*\.?\d*$/, message: "Must be a number" }]}
                   >
                     <Input style={{ width: 100 }} placeholder="Amount" />
                   </Form.Item>

@@ -12,6 +12,7 @@ import {
   Tag,
   List,
   Space,
+  Empty,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -135,32 +136,39 @@ const AwaitingPublicationPage: React.FC = () => {
           justifyContent: "center",
         }}
       >
-        {leakeds.map((leaked) => (
-          <Card
-            key={leaked.id}
-            hoverable
-            style={{ width: 350 }}
-            cover={
-              leaked.logo_url ? (
-                <img
-                  alt={leaked.company_name}
-                  src={leaked.logo_url}
-                  style={{
-                    height: 220,
-                    objectFit: "contain",
-                    background: "linear-gradient(135deg,rgb(193, 223, 159), #a5d6a7)",
-                  }}
-                />
-              ) : null
-            }
-            onClick={() => handleCardClick(leaked)}
-          >
-            <Meta
-              title={leaked.company_name}
-              description={leaked.website || "No website"}
-            />
-          </Card>
-        ))}
+        {leakeds.length === 0 ? (
+          <Col span={24} style={{ textAlign: "center", padding: "50px 0" }}>
+            <Empty description="No publications" />
+          </Col>
+        ) : (
+          leakeds.map((leaked) => (
+            <Card
+              key={leaked.id}
+              hoverable
+              style={{ width: 350 }}
+              cover={
+                leaked.logo_url ? (
+                  <img
+                    alt={leaked.company_name}
+                    src={leaked.logo_url}
+                    style={{
+                      height: 220,
+                      objectFit: "contain",
+                      background: "linear-gradient(135deg,rgb(193, 223, 159), #a5d6a7)",
+                    }}
+                  />
+                ) : null
+              }
+              onClick={() => handleCardClick(leaked)}
+            >
+              <Meta
+                title={leaked.company_name}
+                description={leaked.website || "No website"}
+              />
+            </Card>
+          ))
+        )}
+        
       </div>
 
       <Modal

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { List, Avatar, Typography, message, Spin } from 'antd'
+import { List, Avatar, Typography, message, Spin, Empty, Col } from 'antd'
 import s from './NewsList.module.scss'
 import { AppSettings } from '@/shared'
 
@@ -44,6 +44,12 @@ export const NewsList: React.FC = () => {
         throw new Error('Failed to fetch news')
       }
       const result: NewsItem[] = await response.json()
+      
+      if (!Array.isArray(result)) {
+        setNewsList([]);
+        return;
+      }    
+
       setNewsList(result)
     } catch (error) {
       console.error('Error fetching news:', error)
@@ -57,6 +63,10 @@ export const NewsList: React.FC = () => {
     <div style={{ margin: '0 auto', maxWidth: '1200px', padding: '24px' }}>
       {isLoading ? (
         <Spin tip="Loading..." />
+      ) : newsList.length === 0 ? (
+        <Col span={24} style={{ textAlign: "center", padding: "50px 0" }}>
+          <Empty description="No news" />
+        </Col>
       ) : (
         <List
           className={s.newsList}
@@ -100,7 +110,6 @@ export const NewsList: React.FC = () => {
                   </div>
                 }
               />
-              {/* Красивое отображение короткого описания */}
               {item.preview && (
                 <Paragraph
                   ellipsis={{ rows: 2, expandable: false }}

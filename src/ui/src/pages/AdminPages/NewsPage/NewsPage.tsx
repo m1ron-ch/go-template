@@ -256,13 +256,13 @@ export const NewsPage = () => {
 
   const handleDeleteConfirm = async (newsItem: News) => {
     try {
-      const response = await fetch(`${AppSettings.API_URL}news/delete`, {
+      const response = await fetch(`${AppSettings.API_URL}/news/${newsItem.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ id: newsItem.id, entity_id: newsItem.entity_id }),
+        // body: JSON.stringify({ id: newsItem.id, entity_id: newsItem.entity_id }),
       })
       if (!response.ok) {
         throw new Error('Failed to delete news')
@@ -364,7 +364,7 @@ export const NewsPage = () => {
     setSearchText(e.target.value)
   }
 
-  const filteredNewsList = newsList.filter(item =>
+  const filteredNewsList = newsList?.filter(item =>
     item.title.toLowerCase().includes(searchText.toLowerCase())
   )
 

@@ -97,6 +97,6 @@ func (r *NewsRepository) Update(n news.News) error {
 }
 
 func (r *NewsRepository) Delete(id int64) error {
-	_, err := r.db.Exec("DELETE FROM news WHERE id = ?", id)
+	_, err := r.db.Exec("DELETE FROM news WHERE uid = ?", id)
 	return err
 }

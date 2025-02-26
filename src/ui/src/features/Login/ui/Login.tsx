@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { AppSettings } from '@/shared';
 import s from './Login.module.scss';
-// import Cookies from 'js-cookie';
 
 interface LoginFormValuesType {
   login: string;
@@ -52,32 +51,17 @@ export const Login = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => ""); // Пробуем получить текст ошибки
+        const errorText = await response.text().catch(() => ""); // Try to get error text
       
-        const errorMessage = errorText || `Ошибка: ${response.status} ${response.statusText}`;
+        const errorMessage = errorText || `Error: ${response.status} ${response.statusText}`;
       
         throw new Error(errorMessage);
       }
       
-
-      // const data = await response.json();
-
-      // Cookies.set('token', data.token, { expires: 1, path: '/', sameSite: 'Strict' })
-      // Cookies.set('refresh_token', data.refresh_token, { expires: 1, path: '/', sameSite: 'Strict' })
-      // Cookies.set('user_id', data.user_id, { expires: 1,  path: '/', sameSite: 'Strict' })
-      // Cookies.set('role_id', data.role_id, { expires: 1,  path: '/', sameSite: 'Strict' })
-
-      // Cookies.set('token', data.token, { expires: 1, secure: true, path: '/', sameSite: 'None' });
-      // Cookies.set('refresh_token', data.refresh_token, { expires: 1, secure: true, path: '/', sameSite: 'None'});
-      // Cookies.set('user_id', data.user_id, { expires: 1, secure: true, path: '/', sameSite: 'None'});
-      // Cookies.set('role_id', data.role_id, { expires: 1, secure: true, path: '/', sameSite: 'None' });
-
-      // Cookies.set('token', data.token, { expires: 1, secure: true, path: '/', sameSite: 'None' });
-
-      message.success('Успешный вход!');
+      message.success('Login successful!');
       navigate('/');
     } catch (err) {
-      message.error('Ошибка авторизации: ' + err);
+      message.error('Login failed: ' + err);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +69,7 @@ export const Login = () => {
 
   const handleForgotPassword = async () => {
     if (!forgotPasswordEmail) {
-      message.error('Введите адрес электронной почты');
+      message.error('Please enter your email address');
       return;
     }
 
@@ -101,15 +85,15 @@ export const Login = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send forgot password request');
+        throw new Error('Failed to send password reset request');
       }
 
-      message.success('Письмо с новым паролем отправлено на вашу почту.');
+      message.success('A password reset email has been sent to your email.');
 
       setCanResend(false);
       setResendDisabled(true);
     } catch (err) {
-      message.error('Ошибка при отправке запроса на восстановление пароля: ' + err);
+      message.error('Error sending password reset request: ' + err);
     } finally {
       setIsLoading(false);
     }
@@ -123,14 +107,14 @@ export const Login = () => {
         </Form.Item>
         <Form.Item
           name="login"
-          rules={[{ required: true, message: 'Введите логин пользователя!' }]}
+          rules={[{ required: true, message: 'Enter your login!' }]}
           className={s.formItem}
         >
           <Input placeholder="Login" />
         </Form.Item>
         <Form.Item
           name="password"
-          rules={[{ required: true, message: 'Введите пароль!' }]}
+          rules={[{ required: true, message: 'Enter your password!' }]}
           className={s.formItem}
         >
           <Input.Password
@@ -138,40 +122,31 @@ export const Login = () => {
             iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
           />
         </Form.Item>
-        {/* <Form.Item name="remember" valuePropName="checked" className={s.formItem}>
-          <Checkbox>Запомнить меня</Checkbox>
-        </Form.Item> */}
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={isLoading} className={s.loginButton}>
             Login
           </Button>
         </Form.Item>
-        {/* <Form.Item>
-          <Link onClick={() => setForgotPasswordModalVisible(true)} className={s.forgotPasswordLink}>
-            Забыли пароль?
-          </Link>
-        </Form.Item> */}
       </Form>
 
       <Modal
-        title="Восстановление пароля"
-        visible={isForgotPasswordModalVisible}
+        title="Password Recovery"
+        open={isForgotPasswordModalVisible}
         onCancel={() => setForgotPasswordModalVisible(false)}
         footer={null}
         centered
       >
         <div className={s.modalContent}>
           <Typography.Paragraph className={s.modalDescription}>
-            Введите адрес электронной почты, на который будут отправлены инструкции по
-            восстановлению пароля (<b>если почта была указана <u>ранее</u></b>).
+            Enter your email address to receive password recovery instructions (<b>only if the email was provided <u>previously</u></b>).
           </Typography.Paragraph>
           <Form layout="vertical" className={s.form}>
             <Form.Item
               name="email"
-              rules={[{ required: true, message: 'Введите почту!' }]}
+              rules={[{ required: true, message: 'Enter your email!' }]}
             >
               <Input
-                placeholder="Введите почту"
+                placeholder="Enter your email"
                 value={forgotPasswordEmail}
                 onChange={(e) => setForgotPasswordEmail(e.target.value)}
               />
@@ -184,7 +159,7 @@ export const Login = () => {
               block
               disabled={!canResend || isLoading}
             >
-              {canResend ? 'Восстановить пароль' : `Отправить повторно через ${resendTimer} секунд`}
+              {canResend ? 'Reset Password' : `Resend in ${resendTimer} seconds`}
             </Button>
           </Form>
         </div>

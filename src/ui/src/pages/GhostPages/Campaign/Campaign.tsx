@@ -107,6 +107,11 @@ const CampaignsDashboard: React.FC = () => {
       if (!response.ok) throw new Error("Failed to fetch campaigns");
       const data = await response.json();
 
+      if (!Array.isArray(data)) {
+        setCampaigns([]);
+        return;
+      }      
+
       const parsedData: Campaign[] = data.map((item: any) => ({
         ...item,
         created_at: item.created_at
@@ -166,16 +171,16 @@ const CampaignsDashboard: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const handleViewCampaign = (record: Campaign) => {
-    setSelectedCampaign(record);
-    setIsViewMode(true);
-    editForm.setFieldsValue({
-      company_name: record.company_name || "",
-      website: record.website || "",
-      description: record.description || "",
-    });
-    setIsModalVisible(true);
-  };
+  // const handleViewCampaign = (record: Campaign) => {
+  //   setSelectedCampaign(record);
+  //   setIsViewMode(true);
+  //   editForm.setFieldsValue({
+  //     company_name: record.company_name || "",
+  //     website: record.website || "",
+  //     description: record.description || "",
+  //   });
+  //   setIsModalVisible(true);
+  // };
 
   const handleModalSave = async () => {
     try {
@@ -186,6 +191,7 @@ const CampaignsDashboard: React.FC = () => {
         company_name: values.company_name,
         website: values.website,
         description: values.description,
+        is_accept: 2,
       };
 
       let method = "POST";
@@ -251,6 +257,8 @@ const CampaignsDashboard: React.FC = () => {
   }, [selectedCampaign]);
 
   function fillEditForm(c: Campaign) {
+    console.log(c.expires);
+
     form.setFieldsValue({
       website: c.website || "",
       expiration: c.expires ? dayjs(c.expires) : null,
@@ -293,7 +301,6 @@ const CampaignsDashboard: React.FC = () => {
         blog: blogValues.blogText || selectedCampaign.blog || "",
 
         website: mainValues.website || null,
-        expires: dayjs(expiresStr) || null, 
         payout: Number(mainValues.payout_value || 0),
         payout_unit: Number(mainValues.payout_unit || 0),
         logo_url: localLogoUrl,
@@ -301,6 +308,7 @@ const CampaignsDashboard: React.FC = () => {
         urls: disclosures,
         is_accept: selectedCampaign.is_accept || 2,
         publish: selectedCampaign.publish || 0,
+        ...(expiresStr ? { expires: dayjs(expiresStr) } : {}),
       };
 
       const response = await fetch(`${AppSettings.API_URL}/leakeds/${selectedCampaign.id}`, {
@@ -327,16 +335,17 @@ const CampaignsDashboard: React.FC = () => {
   // ==============================
   const handleSaveBlog = async () => {
     if (!selectedCampaign) return;
-
+  
     try {
-      // Берём данные из формы «Create Blog» и «Edit»
       const blogValues = createBlogForm.getFieldsValue();
-      const mainValues = form.getFieldsValue(); // поля payout и т.д.
-
+      const mainValues = form.getFieldsValue();
+  
       const expiresStr = mainValues.expiration
         ? mainValues.expiration.toISOString()
         : null;
-
+  
+      console.log(expiresStr);
+  
       const updatedCampaign: Campaign = {
         ...selectedCampaign,
         company_name: blogValues.blogCompanyName || "",
@@ -345,13 +354,11 @@ const CampaignsDashboard: React.FC = () => {
         logo_url: localLogoUrl,
         screenshots: localScreenshots,
         urls: disclosures,
-
         website: mainValues.website || null,
-        expires: dayjs(expiresStr || undefined),
         payout: Number(mainValues.payout_value || 0),
         payout_unit: Number(mainValues.payout_unit || 0),
-
-        is_accept: selectedCampaign.is_accept || 0, 
+        is_accept: selectedCampaign.is_accept || 2,
+        ...(expiresStr ? { expires: dayjs(expiresStr) } : {}),
       };
 
       const response = await fetch(
@@ -580,7 +587,7 @@ const CampaignsDashboard: React.FC = () => {
             icon={<EyeOutlined />}
             onClick={(e) => {
               e.stopPropagation();
-              handleViewCampaign(record);
+              // handleViewCampaign(record);
             }}
           />
           <Popconfirm
@@ -795,18 +802,18 @@ const CampaignsDashboard: React.FC = () => {
 
                   <Form.Item label="Target Payout (USD)">
                     <Space>
-                      <Form.Item
-                        name="payout_value"
-                        noStyle
-                        rules={[
-                          {
-                            pattern: /^[0-9]*$/,
-                            message: "Must be a number",
-                          },
-                        ]}
-                      >
-                        <Input style={{ width: 100 }} placeholder="Amount" />
-                      </Form.Item>
+                    <Form.Item
+                      name="payout_value"
+                      noStyle
+                      rules={[
+                        {
+                          pattern: /^\d*\.?\d*$/,
+                          message: "Must be a valid number",
+                        },
+                      ]}
+                    >
+                      <Input style={{ width: 100 }} placeholder="Amount" />
+                    </Form.Item>
                       <Form.Item name="payout_unit" noStyle initialValue="0">
                         <Select style={{ width: 80 }}>
                           <Option value="0">K</Option>

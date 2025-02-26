@@ -27,13 +27,10 @@ func PublishScheduledLeaked(leakedService leaked.Service) {
 	for i := range leakedList {
 		l := &leakedList[i]
 
-		// Сначала проверяем, что l.Expires не nil
 		if l.Expires == nil {
-			// Если нет даты, можно пропустить или обработать по-другому
 			continue
 		}
 
-		// Теперь можно безопасно вызывать l.Expires.UTC()
 		before := l.Expires.UTC().Before(now)
 		equal := l.Expires.UTC().Equal(now)
 

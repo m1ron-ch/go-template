@@ -104,6 +104,11 @@ export const Awaiting: React.FC = () => {
   
       // Получаем данные с сервера
       const data: Leaked[] = await response.json();
+
+      if (!Array.isArray(data) ) {
+        setLeakeds([]);
+        return;
+      }    
   
       // Преобразуем поле expires для каждого элемента
       const transformedData = data.map((item) => ({

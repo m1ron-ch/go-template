@@ -34,6 +34,7 @@ export const NewsDetail: React.FC = () => {
         throw new Error('Failed to fetch news item');
       }
       const result: NewsItem = await response.json();
+
       setNews(result);
     } catch (error) {
       console.error('Error fetching news item:', error);

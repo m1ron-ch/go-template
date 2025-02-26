@@ -240,17 +240,14 @@ func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 		Action:   "read_messages",
 		ChatID:   chatID,
 		SenderID: userID,
-		// Можно при желании добавить список ID сообщений, которые стали прочитанными
 	}
 	data, _ := json.Marshal(out)
 
-	// 1) всем, кто в чате
 	h.ChatManager.Broadcast <- manager.BroadcastMessage{
 		ChatID: chatID,
 		Data:   data,
 	}
 
-	// 2) глобальный broadcast: всем участникам чата
 	userIDs, _ := h.chatService.GetAllUserIDsInChat(chatID)
 	for _, uID := range userIDs {
 		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
