@@ -41,7 +41,7 @@ interface FileRecord {
   folder_name: string;
   archive_number: string;
   status: string;
-  creted_at: string; // Если в JSON опечатка, замените на "created_at"
+  creted_at: string;
 }
 
 export const FilesPage: React.FC = () => {

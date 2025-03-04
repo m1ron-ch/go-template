@@ -13,7 +13,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ visibl
   const [isLoading, setIsLoading] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
 
-  // Функция для отправки запроса на восстановление пароля
+
   const handleForgotPassword = async () => {
     if (!forgotPasswordEmail) {
       message.error('Введите адрес электронной почты');

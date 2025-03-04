@@ -16,6 +16,7 @@ interface MediaItem {
 interface TinyMCEParagraphData {
   text: string;
 }
+
 class TinyMCEParagraph implements BlockTool {
   data: TinyMCEParagraphData;
   api: API;
@@ -128,19 +129,14 @@ const TinyMCEComponent: React.FC<TinyMCEComponentProps> = ({ data, onChange }) =
           autoresize_bottom_margin: 20,
           autoresize_min_height: 500,
 
-          // 1) Main logic: when clicking "add image"
-          //    we open our custom modal instead of the standard file picker.
           file_picker_callback: (cb, _, meta) => {
             if (meta.filetype === 'image') {
-              // Store TinyMCE callback to return the URL after selecting an image
               setFilePickerCallback(() => cb);
-              // Open the modal
               setIsModalOpen(true);
             }
           },
 
           init_instance_callback: () => {
-            // Custom logic, removing the loader
             setEditorLoading(false);
           },
         }}
