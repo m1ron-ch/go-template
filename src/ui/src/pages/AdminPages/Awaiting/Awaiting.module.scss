@@ -1,0 +1,21 @@
+.root {
+  display: flex;
+  flex-direction: column;
+
+  .link {
+    align-self: flex-end;
+  }
+
+  .emptyField {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    padding-top: 200px;
+  }
+
+}
+
+.actionIcons {
+  display: flex;
+  align-items: center;
+}

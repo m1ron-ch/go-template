@@ -1,0 +1,23 @@
+.button {
+  all: unset;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: transparent;
+  border: none;
+
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #1a78c2;
+  }
+
+  &:disabled {
+    cursor: auto;
+    color: #ddd;
+  }
+}
