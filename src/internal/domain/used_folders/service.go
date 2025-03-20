@@ -29,7 +29,6 @@ func (s *service) GetFreeFolder() (string, int, error) {
 		return "", 0, err
 	}
 	nextNum := lastNum + 1
-	// Формируем имя, например "archive_101"
 	folderName := fmt.Sprintf("archive_%d", nextNum)
 	return folderName, nextNum, nil
 }

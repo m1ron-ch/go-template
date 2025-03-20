@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { Layout, Input, Button, Tag, Space } from 'antd'
+import { Layout, Button, Tag, Space } from 'antd'
 import s from './ChatsPage.module.scss'
 import { AppSettings } from '@/shared'
 import { SendOutlined } from '@ant-design/icons'
+import TextArea from 'antd/es/input/TextArea'
 
 interface User {
   user_id: number
@@ -148,9 +149,9 @@ export const SupportChatPage: React.FC = () => {
     }
     setChatWs(ws)
 
-    return () => {
-      ws.close()
-    }
+    // return () => {
+    //   ws.close()
+    // }
   }, [chat, currUser, messagesLoaded]) // если chat или currUser меняется, эффект мог бы заново сработать, но мы защищены проверкой if (!messagesLoaded)
 
   // ======== Обработка входящих WS-сообщений =========
@@ -264,8 +265,22 @@ export const SupportChatPage: React.FC = () => {
   }
 
   return (
-    <Layout className={s.chatsPage} style={{ height: '100vh' }}>
-      <div className={s.chatHeader}>
+    <Layout 
+      className={s.chatsPage} 
+      style={{
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column'
+      }}
+    >
+      {/* ШАПКА ЧАТА */}
+      <div 
+        className={s.chatHeader} 
+        style={{ 
+          padding: '16px', 
+          backgroundColor: '#f5f5f5' 
+        }}
+      >
         <Space>
           <b>Support Chat:</b> {chat.name}
           {chatStatus === 'Connected' ? (
@@ -276,7 +291,15 @@ export const SupportChatPage: React.FC = () => {
         </Space>
       </div>
 
-      <div className={s.messagesContainer}>
+      {/* СПИСОК СООБЩЕНИЙ */}
+      <div 
+        className={s.messagesContainer}
+        style={{ 
+          flex: 1,              // растягивается на всё оставшееся место
+          overflowY: 'auto',    // прокрутка
+          padding: '16px'
+        }}
+      >
         {dateKeys.map(dateKey => {
           const msgs = groupedMessages[dateKey]
           return (
@@ -295,6 +318,7 @@ export const SupportChatPage: React.FC = () => {
                     <div className={s.messageText}>{m.text}</div>
                     <div className={s.checks}>
                       {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {/* Пример «прочитано/не прочитано» */}
                       {m.isRead && isMe && (
                         <span className={s.readMark}>
                           <span className={s.checkOne}>✓</span>
@@ -312,20 +336,33 @@ export const SupportChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div
+      {/* ПОЛЕ ВВОДА + КНОПКА ОТПРАВКИ */}
+      <div 
         className={s.inputSection}
-        style={{ display: 'flex', gap: '8px' }}
+        style={{ 
+          display: 'flex', 
+          gap: '8px',
+          padding: '16px',
+          backgroundColor: '#f5f5f5',
+          flexShrink: 0 // не сжимать
+        }}
       >
-        <Input.TextArea
-          rows={2}
-          value={newMsg}
-          onChange={(e) => setNewMsg(e.target.value)}
-          onPressEnter={(e) => {
-            e.preventDefault()
-            handleSendMessage()
-          }}
-          placeholder="Type your message..."
-        />
+        <div style={{ flex: 1 }}>
+          <TextArea
+            rows={2}
+            style={{ 
+              resize: 'none', 
+              width: '100%' 
+            }}
+            value={newMsg}
+            onChange={(e) => setNewMsg(e.target.value)}
+            onPressEnter={(e) => {
+              e.preventDefault()
+              handleSendMessage()
+            }}
+            placeholder="Type your message..."
+          />
+        </div>
         <Button
           type="primary"
           icon={<SendOutlined />}

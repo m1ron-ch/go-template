@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Popconfirm, Tag, Space, Badge } from 'antd'
+import { Layout, List, Avatar, Input, Modal, Dropdown, MenuProps, Button, Popconfirm, Tag, Space, Badge, Col, Empty } from 'antd'
 import s from './ChatsPage.module.scss'
 import { AppSettings } from '@/shared'
 import { SendOutlined } from '@ant-design/icons'
@@ -311,9 +311,12 @@ export const ChatsPage: React.FC = () => {
         credentials: 'include',
       })
       const data = await res.json()
-
+    
+      // Если data не массив, заменяем его на пустой массив
+      const messagesArray = Array.isArray(data) ? data : []
+    
       // Преобразуем к Message
-      const mappedMessages: Message[] = data.map((m: any) => ({
+      const mappedMessages: Message[] = messagesArray.map((m: any) => ({
         id: m.id,
         text: m.content,
         sender: m.sender.role_id === 1 ? 'me' : 'other',
@@ -323,7 +326,7 @@ export const ChatsPage: React.FC = () => {
         isRead: m.is_read,
         created_at: m.created_at,
       }))
-
+    
       // Обновляем нужный чат в стейте
       setChats(prev =>
         prev.map(chat =>
@@ -338,14 +341,13 @@ export const ChatsPage: React.FC = () => {
                   ? formatDateOrTime(mappedMessages[mappedMessages.length - 1].created_at)
                   : '',
                 count_un_read: 0,
-                // Можно обнулить count_un_read, если считаем, что все прочитаны при открытии
               }
             : chat
         )
       )
     } catch (error) {
       console.error('Error fetching messages:', error)
-    }
+    }    
   }
 
   // ======= 5) Обработка входящих WS-событий (только для активного чата) =======
@@ -684,45 +686,48 @@ export const ChatsPage: React.FC = () => {
             </div>
 
             <div className={s.messagesContainer}>
-              {dateKeys.map(dateKey => {
-                const messagesForDate = groupedMessages[dateKey]
-
-                return (
-                  <div key={dateKey}>
-                    {/* Centered date divider */}
-                    <div className={s.dateDivider}>
-                      {formatChatDateLabel(dateKey)}
-                    </div>
-                    
-                    {messagesForDate.map((m) => {
-                      const isMe = m.sender === 'me'
-                      const menuItems = getMenuItems(m.id, m.text)
-
-                      return (
-                        <Dropdown key={m.id} menu={{ items: menuItems }} trigger={['contextMenu']}>
-                          <div className={`${s.messageItem} ${isMe ? s.myMessage : s.otherMessage}`}>
-                            <div className={s.sender}><b>{m.sender_name}</b></div>
-                            <div className={s.messageText}>{m.text}</div>
-
-                            <div className={s.checks}>
-                              {/* If you want to show time for the message itself: */}
-                              {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              {m.isRead && isMe && (
-                                <span className={s.readMark}>
-                                  <span className={s.checkOne}>✓</span>
-                                  <span className={s.checkTwo}>✓</span>
-                                </span>
-                              )}
-                              {!m.isRead && isMe && <span className={s.unreadMark}>✓</span>}
+              {activeChat.messages.length === 0 ? (
+                <div className={s.emptyChatMessage}>
+                  <Col span={24} style={{ textAlign: "center", padding: "50px 0" }}>
+                    <Empty description="No messages" />
+                  </Col>
+                </div>
+              ) : (
+                dateKeys.map(dateKey => {
+                  const messagesForDate = groupedMessages[dateKey]
+                  return (
+                    <div key={dateKey}>
+                      <div className={s.dateDivider}>
+                        {formatChatDateLabel(dateKey)}
+                      </div>
+                      {messagesForDate.map((m) => {
+                        const isMe = m.sender === 'me'
+                        const menuItems = getMenuItems(m.id, m.text)
+              
+                        return (
+                          <Dropdown key={m.id} menu={{ items: menuItems }} trigger={['contextMenu']}>
+                            <div className={`${s.messageItem} ${isMe ? s.myMessage : s.otherMessage}`}>
+                              <div className={s.sender}><b>{m.sender_name}</b></div>
+                              <div className={s.messageText}>{m.text}</div>
+                              <div className={s.checks}>
+                                {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {m.isRead && isMe && (
+                                  <span className={s.readMark}>
+                                    <span className={s.checkOne}>✓</span>
+                                    <span className={s.checkTwo}>✓</span>
+                                  </span>
+                                )}
+                                {!m.isRead && isMe && <span className={s.unreadMark}>✓</span>}
+                              </div>
                             </div>
-                          </div>
-                        </Dropdown>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-              {/* «якорь» для автоскролла */}
+                          </Dropdown>
+                        )
+                      })}
+                    </div>
+                  )
+                })
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 

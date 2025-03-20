@@ -95,10 +95,10 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/news/{id}", h.UpdateNews).Methods(http.MethodPut)
 	private.HandleFunc("/news/{id}", h.DeleteNews).Methods(http.MethodDelete)
 
-	private.HandleFunc("/chats", h.GetAllChats).Methods(http.MethodGet)      // GET /api/chats
-	private.HandleFunc("/chats/{id}", h.GetChatByID).Methods(http.MethodGet) // GET /api/chats/{id}
-	private.HandleFunc("/chats", h.CreateChat).Methods(http.MethodPost)      // POST /api/chats
-	private.HandleFunc("/chats/{id}", h.UpdateChat).Methods(http.MethodPut)  // PUT /api/chats/{id}
+	private.HandleFunc("/chats", h.GetAllChats).Methods(http.MethodGet)
+	private.HandleFunc("/chats/{id}", h.GetChatByID).Methods(http.MethodGet)
+	private.HandleFunc("/chats", h.CreateChat).Methods(http.MethodPost)
+	private.HandleFunc("/chats/{id}", h.UpdateChat).Methods(http.MethodPut)
 	private.HandleFunc("/chats/{id}", h.DeleteChat).Methods(http.MethodDelete)
 
 	private.HandleFunc("/chats_user/{id}", h.GetAllChatsByLeakedID).Methods(http.MethodGet)
@@ -127,11 +127,15 @@ func (h *Handler) InitRoutes() *mux.Router {
 	private.HandleFunc("/media/delete", h.DeleteMediaHandle).Methods(http.MethodDelete)
 
 	private.HandleFunc("/generate_archive", h.GenerateCompanyArchive).Methods(http.MethodPost)
+	private.HandleFunc("/generate_archive_decryptor", h.GenerateCompanyArchiveDecryptor).Methods(http.MethodPost)
 
 	private.HandleFunc("/blog", h.Blog).Methods(http.MethodPost)
 
 	private.HandleFunc("/leakeds/{id}/accept", h.LeakedAccepted).Methods(http.MethodPut)
 	private.HandleFunc("/leakeds/{id}/reject", h.LeakedReject).Methods(http.MethodPut)
+
+	// router.HandleFunc(fmt.Sprintf("/%s/user", h.config.WSProtocol), h.userWebSocket).Methods(http.MethodGet)
+	// router.HandleFunc(fmt.Sprintf("/%s/chat", h.config.WSProtocol), h.chatWebSocket).Methods(http.MethodGet)
 
 	router.HandleFunc("/ws/user", h.userWebSocket).Methods(http.MethodGet)
 	router.HandleFunc("/ws/chat", h.chatWebSocket).Methods(http.MethodGet)
@@ -180,26 +184,20 @@ func (h *Handler) userWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаём Connection, где ChatID = -1 (или 0),
-	// чтобы отметить, что это "глобальный" коннект пользователя
 	conn := &manager.Connection{
 		Ws:     wsConn,
 		Send:   make(chan []byte, 256),
 		UserID: userID,
-		ChatID: -1, // или 0, если хотите
+		ChatID: -1, // < 0 -> "глобальное" соединение.
 	}
 
-	// Зарегистрируем этот "глобальный" коннект в менеджере
 	h.ChatManager.RegisterGlobal <- conn
 
-	// Запускаем горутину на запись (send)
 	go writePump(conn)
-	// И читаем входящие сообщения (если они вам нужны)
-	// можно использовать ту же readPump, если логика одинаковая,
-	// или завести отдельный readPumpUser(...)
-	readPump(h, conn)
+	go readPump(h, conn)
 }
 
+// chatWebSocket — подключение к конкретному чату.
 func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("chat websocket")
 
@@ -235,19 +233,22 @@ func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Помечаем все непрочитанные сообщения этого пользователя в этом чате как прочитанные.
 	h.chatService.UpdateUnReadMsg(int(chatID), int(userID))
+
+	// Шлём broadcas'ы о том, что сообщения прочитаны (для этого чата и всем глобальным).
 	out := OutgoingMessage{
 		Action:   "read_messages",
 		ChatID:   chatID,
 		SenderID: userID,
 	}
 	data, _ := json.Marshal(out)
-
+	// 1) всем в чате
 	h.ChatManager.Broadcast <- manager.BroadcastMessage{
 		ChatID: chatID,
 		Data:   data,
 	}
-
+	// 2) всем глобальным сокетам участников.
 	userIDs, _ := h.chatService.GetAllUserIDsInChat(chatID)
 	for _, uID := range userIDs {
 		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
@@ -256,27 +257,28 @@ func (h *Handler) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	conn := &Connection{
+	conn := &manager.Connection{
 		Ws:     wsConn,
 		Send:   make(chan []byte, 256),
 		UserID: userID,
 		ChatID: chatID,
 	}
-
+	// Регистрируем в менеджере.
 	h.ChatManager.Register <- conn
+
 	go writePump(conn)
-	readPump(h, conn)
+	go readPump(h, conn)
 }
 
-// --- методы для create/edit/delete:
+// createMessage — сохранение в БД + оповещение всех участников.
+func (h *Handler) createMessage(c *manager.Connection, content string) {
+	log.Println("Create message:", content)
 
-func (h *Handler) createMessage(c *Connection, content string) {
 	msgID, err := h.chatService.CreateMessage(c.ChatID, c.UserID, content)
 	if err != nil {
 		log.Println("createMessage error:", err)
 		return
 	}
-
 	user, err := h.userService.GetUserByID(c.UserID)
 	if err != nil {
 		log.Println(err)
@@ -294,28 +296,32 @@ func (h *Handler) createMessage(c *Connection, content string) {
 	}
 	data, _ := json.Marshal(out)
 
-	// 1) Шлём всем, кто сейчас «сидит» в этом чате
+	// 1) всем, кто в чате:
 	h.ChatManager.Broadcast <- manager.BroadcastMessage{
 		ChatID: c.ChatID,
 		Data:   data,
 	}
 
-	// 2) Шлём всем участникам чата на их "глобальные" сокеты:
+	// 2) всем «глобальным» сокетам участников.
 	userIDs, err := h.chatService.GetAllUserIDsInChat(c.ChatID)
 	if err != nil {
 		log.Println("error retrieving chat participants:", err)
 		return
 	}
 	for _, uID := range userIDs {
-		// Шлём глобальное сообщение "create" каждому участнику чата:
 		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
 			UserID: int64(uID),
 			Data:   data,
 		}
 	}
+
+	log.Println("Message added successfully and broadcasted")
 }
 
-func (h *Handler) editMessage(c *Connection, msgID int64, newContent string) {
+// editMessage — редактирование в БД + оповещение.
+func (h *Handler) editMessage(c *manager.Connection, msgID int64, newContent string) {
+	log.Println("Editing message:", msgID, "New content:", newContent)
+
 	err := h.chatService.EditMessage(msgID, c.UserID, newContent)
 	if err != nil {
 		log.Println("editMessage error:", err)
@@ -329,13 +335,29 @@ func (h *Handler) editMessage(c *Connection, msgID int64, newContent string) {
 		ChatID:    c.ChatID,
 	}
 	data, _ := json.Marshal(out)
+
+	// 1) всем в чате:
 	h.ChatManager.Broadcast <- manager.BroadcastMessage{
 		ChatID: c.ChatID,
 		Data:   data,
 	}
+
+	// 2) всем «глобальным» сокетам участников (если нужно).
+	userIDs, _ := h.chatService.GetAllUserIDsInChat(c.ChatID)
+	for _, uID := range userIDs {
+		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
+			UserID: int64(uID),
+			Data:   data,
+		}
+	}
+
+	log.Println("Message edited successfully and broadcasted")
 }
 
-func (h *Handler) deleteMessage(c *Connection, msgID int64) {
+// deleteMessage — удаление в БД + оповещение.
+func (h *Handler) deleteMessage(c *manager.Connection, msgID int64) {
+	log.Println("Deleting message:", msgID)
+
 	err := h.chatService.DeleteMessage(msgID, c.UserID)
 	if err != nil {
 		log.Println("deleteMessage error:", err)
@@ -348,8 +370,21 @@ func (h *Handler) deleteMessage(c *Connection, msgID int64) {
 		ChatID:    c.ChatID,
 	}
 	data, _ := json.Marshal(out)
+
+	// 1) всем в чате:
 	h.ChatManager.Broadcast <- manager.BroadcastMessage{
 		ChatID: c.ChatID,
 		Data:   data,
 	}
+
+	// 2) всем «глобальным» сокетам участников (если нужно).
+	userIDs, _ := h.chatService.GetAllUserIDsInChat(c.ChatID)
+	for _, uID := range userIDs {
+		h.ChatManager.BroadcastUser <- manager.BroadcastUserMessage{
+			UserID: int64(uID),
+			Data:   data,
+		}
+	}
+
+	log.Println("Message deleted successfully and broadcasted")
 }

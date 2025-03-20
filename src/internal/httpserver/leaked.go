@@ -11,8 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// ...
-
 func (h *Handler) GetAllLeakeds(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodGet)
 
@@ -47,7 +45,6 @@ func (h *Handler) GetCountNotAccepted(w http.ResponseWriter, r *http.Request) {
 		Count: notAcceptedCount,
 	}
 
-	// Кодируем JSON-ответ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -105,7 +102,6 @@ func (h *Handler) GetAllCampaing(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateCampaing(w http.ResponseWriter, r *http.Request) {
 	h.SetCORSHeaders(w, http.MethodPost)
 
-	// Parse JSON from request
 	var newLeak leaked.Leaked
 	if err := json.NewDecoder(r.Body).Decode(&newLeak); err != nil {
 		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
@@ -146,7 +142,6 @@ func (h *Handler) CreateCampaing(w http.ResponseWriter, r *http.Request) {
 	// Optionally set creation time if your domain logic needs it:
 	// newLeak.CreateAt = time.Now()  // or other default fields
 
-	// Call service
 	createdID, err := h.leakedService.Create(&newLeak)
 	if err != nil {
 		http.Error(w, "Error creating leaked: "+err.Error(), http.StatusInternalServerError)
@@ -161,7 +156,6 @@ func (h *Handler) CreateCampaing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// You can return just the ID, or fetch the newly-created record, or echo what was created.
 	resp := map[string]interface{}{
 		"id":      createdID,
 		"message": "Leaked created successfully",

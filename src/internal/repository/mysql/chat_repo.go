@@ -98,7 +98,7 @@ func (r *ChatRepository) GetAllChats(user *user.User) ([]chat.Chat, error) {
 			ON m.id = (
 				SELECT m2.id
 				FROM messages m2
-				WHERE m2.chat_id = c.id
+				WHERE m2.chat_id = c.id AND m2.is_deleted = false
 				ORDER BY m2.id DESC
 				LIMIT 1
 			)
@@ -209,7 +209,7 @@ func (r *ChatRepository) EditMessage(msgID, senderID int64, newContent string) e
 // DeleteMessage marks message as deleted (logical delete)
 func (r *ChatRepository) DeleteMessage(msgID, senderID int64) error {
 	query := `UPDATE messages SET is_deleted=true, updated_at=?
-						WHERE id=? AND sender_id=? AND is_deleted=false`
+						WHERE id=? AND sender_id=? AND is_deleted = false`
 	_, err := r.db.Exec(query, time.Now(), msgID, senderID)
 	return err
 }
@@ -219,7 +219,7 @@ func (r *ChatRepository) GetAllMessagesByChat(chatID int64) ([]chat.Message, err
 	query := `SELECT m.id, m.chat_id, m.content, m.is_read, m.is_deleted, m.created_at, m.updated_at, u.uid, u.login, u.role_id
 		FROM messages m
 		INNER JOIN users u ON u.uid = m.sender_id
-		WHERE m.chat_id=?
+		WHERE m.chat_id=? AND is_deleted = false
 		ORDER BY m.created_at ASC`
 	rows, err := r.db.Query(query, chatID)
 	if err != nil {

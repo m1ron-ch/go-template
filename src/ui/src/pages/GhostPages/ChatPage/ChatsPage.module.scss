@@ -1,10 +1,57 @@
 .chatsPage {
+  // Удаляем/комментируем height: 90vh;
+  // height: 90vh; // <-- комментируем, т.к. используем 100vh inline
   background: #fff;
-  height: 90vh;
-  .ant-layout-sider {
-    background: #fff;
-    border-right: 1px solid #eee;
-  }
+
+  // Можно добавить display: flex; flex-direction: column;
+  // Но мы уже прописали это inline-стилями, чтобы всё было в одном месте.
+}
+
+// Шапка чата
+.chatHeader {
+  // если нужно, можно задать border-bottom, фон и т.д.
+  border-bottom: 1px solid #eee;
+}
+
+// Контейнер сообщений
+.messagesContainer {
+  // flex: 1; overflow-y: auto; padding: 16px;
+  // У нас это уже прописано inline
+  background: #fff;
+}
+
+// Секция ввода
+.inputSection {
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  // display: flex; gap: 8px; padding: 8px;
+  // Тоже прописали inline
+}
+
+// Пример оформления сообщения
+.messageItem {
+  display: block;
+  padding: 10px 14px;
+  margin: 8px 0;
+  border-radius: 10px;
+  max-width: 60%;
+  width: fit-content;
+  word-wrap: break-word;
+  position: relative;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.myMessage {
+  background-color: #d2f8d2;
+  margin-left: auto; // чтобы «прижалось» к правому краю
+  text-align: left;
+}
+
+.otherMessage {
+  background-color: #f2f2f2;
+  margin-right: auto; // прижмётся к левому краю
+  text-align: left;
 }
 
 /* Левая колонка */
@@ -46,18 +93,18 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  .chatHeader {
-    padding: 16px;
-    font-weight: 600;
-    border-bottom: 1px solid #eee;
-  }
+  // .chatHeader {
+  //   padding: 16px;
+  //   font-weight: 600;
+  //   border-bottom: 1px solid #eee;
+  // }
 
-  .messagesContainer {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    background: #fff;
-  }
+  // .messagesContainer {
+  //   flex: 1;
+  //   overflow-y: auto;
+  //   padding: 16px;
+  //   background: #fff;
+  // }
 }
 
 /* Сообщения */
@@ -124,11 +171,11 @@
 }
 
 /* Поле ввода */
-.inputSection {
-  border-top: 1px solid #eee;
-  padding: 8px;
-  background: #fafafa;
-}
+// .inputSection {
+//   border-top: 1px solid #eee;
+//   padding: 8px;
+//   background: #fafafa;
+// }
 
 /* Если чат не выбран */
 .noChatSelected {
@@ -157,38 +204,38 @@
 }
 
 
-.messageItem {
-  display: block;
-  padding: 10px 14px;
-  margin: 8px 0;
-  border-radius: 10px;
-  max-width: 60%;
-  width: fit-content; /* Автоматическая ширина по содержимому */
-  word-wrap: break-word; /* Перенос длинных слов */
-  position: relative;
-  font-size: 14px;
-  line-height: 1.4;
-}
+// .messageItem {
+//   display: block;
+//   padding: 10px 14px;
+//   margin: 8px 0;
+//   border-radius: 10px;
+//   max-width: 60%;
+//   width: fit-content; /* Автоматическая ширина по содержимому */
+//   word-wrap: break-word; /* Перенос длинных слов */
+//   position: relative;
+//   font-size: 14px;
+//   line-height: 1.4;
+// }
 
-.myMessage {
-  background-color: #d2f8d2; /* Зеленый фон */
-  align-self: flex-end; /* Выравнивание по правому краю */
-  text-align: left;
-  margin-left: auto; /* Добавляем отступ, чтобы сообщение прижималось вправо */
-}
+// .myMessage {
+//   background-color: #d2f8d2; /* Зеленый фон */
+//   align-self: flex-end; /* Выравнивание по правому краю */
+//   text-align: left;
+//   margin-left: auto; /* Добавляем отступ, чтобы сообщение прижималось вправо */
+// }
 
-.otherMessage {
-  background-color: #f2f2f2; /* Серый фон */
-  align-self: flex-start; /* Выравнивание по левому краю */
-  text-align: left;
-}
+// .otherMessage {
+//   background-color: #f2f2f2; /* Серый фон */
+//   align-self: flex-start; /* Выравнивание по левому краю */
+//   text-align: left;
+// }
 
-.messagesContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch; /* Убираем возможные выравнивания */
-  padding: 16px;
-  overflow-y: auto;
-  height: 100%;
-}
+// .messagesContainer {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: stretch; /* Убираем возможные выравнивания */
+//   padding: 16px;
+//   overflow-y: auto;
+//   height: 100%;
+// }
 

@@ -17,6 +17,7 @@ type Config struct {
 	JWTSecret    string       `yaml:"jwt_secret"`
 	URL1         string       `yaml:"url_1"`
 	URL2         string       `yaml:"url_2"`
+	WSProtocol   string       `yaml:"ws_protocol" env-default:"ws"`
 }
 
 type ServerConfig struct {

@@ -657,8 +657,12 @@ func (r *LeakedRepository) GetByID(leakedID int) (*leaked.Leaked, error) {
         INNER JOIN users u ON u.uid = l.user_id
         LEFT JOIN leaked_screenshots ls ON ls.leaked_id = l.id
         LEFT JOIN leaked_urls lu ON lu.leaked_id = l.id
-        WHERE l.id = ? AND l.publish = 1
+        WHERE l.id = ?
     `
+
+	fmt.Println(query)
+	fmt.Println(leakedID)
+
 	rows, err := r.db.Query(query, leakedID)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)

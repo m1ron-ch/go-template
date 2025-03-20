@@ -14,6 +14,7 @@ import { NewsDetail } from '@/pages/GhostPages/NewsDetail';
 import { AwaitingPublicationDetail } from '@/pages/GhostPages/AwaitingPublicationDetail';
 import { LealedDetail } from '@/pages/GhostPages/LealedDetail';
 import Campaign from '@/pages/GhostPages/Campaign/Campaign';
+import { SupportChatPage } from '@/pages/GhostPages/ChatPage/SupportChatPage';
 
 export const router = createBrowserRouter([
   // ПУБЛИЧНАЯ ГЛАВНАЯ (пример)
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'awaiting-publication', element: <AwaitingPublicationPage /> },
       { path: 'awaiting-publication/:id', element: <AwaitingPublicationDetail /> },
       { path: 'chat', element: <AwaitingPublicationPage /> },
+      { path: 'support', element: <SupportChatPage /> },
       // { path: 'terms-and-conditions', element: <TermsPage /> },
       // { path: 'order-service', element: <OrderServicePage /> },
     ],

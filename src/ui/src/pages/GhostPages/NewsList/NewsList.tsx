@@ -59,6 +59,16 @@ export const NewsList: React.FC = () => {
     }
   }
 
+  function toLocalDateTime(dateStr?: string, timeStr?: string) {
+    if (!dateStr || !timeStr) return ''
+    // Собираем "2025-03-05T15:22:00Z" (Z означает UTC)
+    const combined = `${dateStr}T${timeStr}Z`
+    const dt = new Date(combined)
+    // Возвращаем строку в локальном формате
+    // Можно toLocaleString(), toLocaleDateString() + toLocaleTimeString(), etc.
+    return dt.toLocaleString()
+  }
+
   return (
     <div style={{ margin: '0 auto', maxWidth: '1200px', padding: '24px' }}>
       {isLoading ? (
@@ -104,7 +114,7 @@ export const NewsList: React.FC = () => {
                     </div>
                     {(item.date || item.time) && (
                       <Text className={s.dateTime}>
-                        {item.date} &nbsp; {item.time}
+                        {toLocalDateTime(item.date, item.time)}
                       </Text>
                     )}
                   </div>

@@ -562,7 +562,7 @@ export const NewsPage = () => {
         ]}
         width={1200}
       >
-        <Form form={form} onFinish={() => {}} /* nothing here, saving is handled by handleModalSave */>
+        <Form form={form} onFinish={() => {}} >
           <Form.Item label="Visibility" name="is_visibility">
             <Select
               value={isVisibility}

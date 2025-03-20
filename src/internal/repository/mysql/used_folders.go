@@ -62,6 +62,9 @@ func (r *usedFoldersRepository) IsFolderUsed(folderName string) (bool, error) {
 func (r *usedFoldersRepository) GetMaxArchiveNumber() (int, error) {
 	var maxNum sql.NullInt64
 	err := r.db.QueryRow(`SELECT COALESCE(MAX(archive_number), 0) FROM used_folders`).Scan(&maxNum)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
 	if err != nil {
 		return 0, err
 	}

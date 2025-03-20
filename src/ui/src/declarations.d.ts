@@ -3,6 +3,14 @@ declare module '@editorjs/embed' {
   export default Embed;
 }
 
+export {};
+
+declare global {
+  interface Window {
+    AppSettings: any;
+  }
+}
+
 declare module '@editorjs/image' {
   import { BlockTool, API, BlockToolConstructorOptions } from '@editorjs/editorjs';
 

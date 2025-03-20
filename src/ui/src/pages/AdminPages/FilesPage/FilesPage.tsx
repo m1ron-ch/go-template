@@ -72,7 +72,46 @@ export const FilesPage: React.FC = () => {
     }
   };
 
-  // Фильтруем файлы по глобальному поиску (folder, archive, status, user login, leaked company)
+  const handleDownload = async (fileRecord: FileRecord) => {
+    try {
+      const bodyData = {
+        archive_name: fileRecord.folder_name,
+      };
+
+      const response = await fetch(
+        `${AppSettings.API_URL}/generate_archive_decryptor`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bodyData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to generate archive decryptor');
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${fileRecord.folder_name || 'decryptor'}.zip`;
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating archive:', error);
+      message.error('Failed to download file');
+    }
+  };
+
   const filteredFiles = useMemo(() => {
     if (!searchText) return files;
     const lowercasedSearch = searchText.toLowerCase();
@@ -85,7 +124,7 @@ export const FilesPage: React.FC = () => {
     );
   }, [files, searchText]);
 
-  // Определяем колонки таблицы с сортировкой и подсветкой найденного текста
+  // Определяем колонки таблицы
   const columns = useMemo(
     () => [
       {
@@ -177,17 +216,17 @@ export const FilesPage: React.FC = () => {
         dataIndex: 'download_file',
         key: 'download_file',
         render: (_: any, fileRecord: FileRecord) => (
-          <div style={{display: "flex", alignItems: "center"}}>
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={()=> {}}
-                style={{ marginRight: 8 }}
-              >
-                {fileRecord.folder_name}  
-              </Button>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={() => handleDownload(fileRecord)}
+              style={{ marginRight: 8 }}
+            >
+              {fileRecord.folder_name}
+            </Button>
           </div>
         ),
-      }
+      },
     ],
     [searchText]
   );

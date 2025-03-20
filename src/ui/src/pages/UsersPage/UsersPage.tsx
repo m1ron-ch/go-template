@@ -17,19 +17,6 @@ interface User {
   login: string
   role_id: number
   status_id: number
-
-  // If you still need these fields, you can keep them. 
-  // But in your JSON, they're not present:
-  // last_login: string
-  // registration_date: string
-  // token_creation: string
-  // l_name: string
-  // f_name: string
-  // m_name: string
-  // ipv4: string
-  // password: string
-  // email: string
-  // ...
 }
 
 export const UsersPage: React.FC = () => {
@@ -237,9 +224,18 @@ export const UsersPage: React.FC = () => {
       title: 'Status',
       dataIndex: 'status_id',
       key: 'status_id',
-      render: (status: number) => (
-        <span style={{ color: getColorByStatus(status) }}>{getUserStatus(status)}</span>
-      ),
+      filters: [
+        { text: 'Active', value: 1 },
+        { text: 'Blocked', value: 2 },
+        { text: 'Deleted', value: 3 },
+      ],
+      filterMultiple: true,
+      // Разрешаем value быть string | number | boolean
+      onFilter: (value: any, record: User) => record.status_id === Number(value),
+      defaultFilteredValue: [1],
+      render: (status: number) => {
+        return <span style={{ color: getColorByStatus(status) }}>{getUserStatus(status)}</span>;
+      },
     },
     {
       title: 'Name',
@@ -270,7 +266,11 @@ export const UsersPage: React.FC = () => {
             />
           )}
           {u.id !== user?.id && u.status_id != 3 && (user?.role_id === 1 || u.role_id !== 1) && (
-            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteUser(u)} danger />
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteUser(u)}
+              danger
+            />
           )}
         </div>
       ),

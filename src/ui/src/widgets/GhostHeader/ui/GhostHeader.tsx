@@ -55,6 +55,9 @@ export const GhostHeader: React.FC = () => {
     user?.role_id !== 1
       ? { key: 'Campaign', label: <Link to="/campaign">Campaign</Link> }
       : null,
+    user?.role_id !== 1
+    ? { key: 'Support', label: <Link to="/support">Support</Link> }
+    : null,
     {
       key: 'logout',
       label: 'Logout',

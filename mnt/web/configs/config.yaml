@@ -1,10 +1,11 @@
-env: "local" #prod
+env: "local" # prod
 
 jwt_secret: "JWTSecretT0Ken$!#@*(!$)!"
 
-url_1: "https://ip:port" #шифрованные файлы
-url_2: "https://ip:port" #дешифратор
+url_1: "http://5.180.34.42:8090" # шифрованные файлы
+url_2: "http://5.180.34.42:8090" # дешифратор
 
+ws_protocol: "ws" # ws - htpp / wss - https only
 
 server:
   address: "0.0.0.0"
