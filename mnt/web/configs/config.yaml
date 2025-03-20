@@ -1,0 +1,20 @@
+env: "local" # prod
+
+jwt_secret: "JWTSecretT0Ken$!#@*(!$)!"
+
+url_1: "http://5.180.34.42:8090" # шифрованные файлы
+url_2: "http://5.180.34.42:8090" # дешифратор
+
+ws_protocol: "ws" # ws - htpp / wss - https only
+
+server:
+  address: "0.0.0.0"
+  port: "8080"
+  timeout: 45s
+
+database:
+  db_name: "blog"
+  hostname: "mysql"
+  port: "3306"
+  username: "root"
+  password: "ahXu8eafish1bee2Eedo"
